@@ -23,6 +23,12 @@ echo "Using memory split of ${FW_RAM}MB/${FW_GPU}MB"
 
 GITCMD="git --git-dir=${FW_PATH}/.git --work-tree=${FW_PATH}"
 
+function do_depmod {
+	for D in `find ${FW_PATH}/modules -mindepth 1 -maxdepth 1 -type d`; do
+		depmod -a `basename $D`
+	done
+}
+
 if $($GITCMD rev-parse &> /dev/null); then
 	echo "Updating firmware (this will take a few minutes)"
 	rm -f ${FW_PATH}/start.elf
@@ -30,7 +36,7 @@ if $($GITCMD rev-parse &> /dev/null); then
 	$GITCMD merge origin/master --no-edit --quiet
 	cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
 	cp -R ${FW_PATH}/modules/* /lib/modules/
-	depmod -a
+	do_depmod
 	echo "If no errors appeared, your firmware was successfully updated"
 else
 	echo "We're running for the first time"
@@ -44,7 +50,7 @@ else
 		cp -R ${FW_PATH}.bak ${FW_PATH}
 	else
 		cp -R ${FW_PATH}/modules/* /lib/modules/
-		depmod -a
+		do_depmod
 		cp ${FW_PATH}.bak/*.txt ${FW_PATH}/ &> /dev/null
 		cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
 		echo "If no errors appeared, your firmware was successfully setup"
