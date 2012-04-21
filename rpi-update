@@ -3,7 +3,6 @@
 set -o nounset
 set -o errexit
 
-SELF=$(basename $0)
 UPDATE=${2:-1}
 UPDATE_URI="https://raw.github.com/Hexxeh/rpi-update/master/rpi-update"
 FW_REPO="git://github.com/Hexxeh/rpi-firmware.git"
