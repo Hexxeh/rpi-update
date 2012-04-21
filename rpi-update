@@ -1,15 +1,65 @@
 #!/bin/bash
 
+set -o nounset
+set -o errexit
+
+SELF=$(basename $0)
+UPDATE=${2:-1}
+UPDATE_URI="https://raw.github.com/Hexxeh/rpi-update/master/rpi-update"
 FW_REPO="git://github.com/Hexxeh/rpi-firmware.git"
 FW_PATH="/boot"
 FW_RAM=${1:-224}
 FW_GPU=$((256-FW_RAM))
 
-echo "Raspberry Pi firmware updater by Hexxeh"
+function update_self() {
+	echo "Performing self-update" 
+	_tempFileName="$0.tmp"
+	_payloadName="$0.payload"
+ 
+	if ! wget --quiet --output-document="$_payloadName" $UPDATE_URI ; then
+		echo "Failed: Error while trying to wget new version!"
+		echo "File requested: $UPDATE_URI"
+		exit 1
+	fi
+ 
+	_interpreter=$(head --lines=1 "$0")
+	echo $_interpreter > "$_tempFileName"
+	tail --lines=+2 "$_payloadName" >> "$_tempFileName"
+	rm "$_payloadName"
+ 
+	OCTAL_MODE=$(stat -c '%a' $SELF)
+	if ! chmod $OCTAL_MODE "$_tempFileName" ; then
+  		echo "Failed: Error while trying to set mode on $_tempFileName."
+		exit 1
+	fi
+
+	cat > updateScript.sh << EOF
+	#!/bin/bash
+	if mv "$_tempFileName" "$0"; then
+		rm -- \$0
+		exec /bin/bash $0 ${FW_RAM} 0
+	else
+		echo "Failed!"
+	fi
+EOF
+ 
+	exec /bin/bash updateScript.sh "$@"
+}
+
+function do_depmod {
+	for D in `find ${FW_PATH}/modules -mindepth 1 -maxdepth 1 -type d`; do
+		depmod -a `basename $D`
+	done
+}
 
 if [[ $EUID -ne 0 ]]; then
 	echo "This tool must be run as root"
 	exit 1
+fi
+
+if [[ $UPDATE -ne 0 ]]; then
+	echo "Raspberry Pi firmware updater by Hexxeh"
+	update_self
 fi
 
 command -v git >/dev/null 2>&1 || {
@@ -22,12 +72,6 @@ command -v git >/dev/null 2>&1 || {
 echo "Using memory split of ${FW_RAM}MB/${FW_GPU}MB"
 
 GITCMD="git --git-dir=${FW_PATH}/.git --work-tree=${FW_PATH}"
-
-function do_depmod {
-	for D in `find ${FW_PATH}/modules -mindepth 1 -maxdepth 1 -type d`; do
-		depmod -a `basename $D`
-	done
-}
 
 if $($GITCMD rev-parse &> /dev/null); then
 	echo "Updating firmware (this will take a few minutes)"
