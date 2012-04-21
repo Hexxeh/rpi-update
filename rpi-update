@@ -29,6 +29,8 @@ if $($GITCMD rev-parse &> /dev/null); then
 	$GITCMD fetch --quiet
 	$GITCMD merge origin/master --no-edit --quiet
 	cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
+	cp -R ${FW_PATH}/modules/* /lib/modules/
+	depmod -a
 	echo "If no errors appeared, your firmware was successfully updated"
 else
 	echo "We're running for the first time"
@@ -41,6 +43,8 @@ else
 		echo "We failed! Attmepting to restore your original firmware"
 		cp -R ${FW_PATH}.bak ${FW_PATH}
 	else
+		cp -R ${FW_PATH}/modules/* /lib/modules/
+		depmod -a
 		cp ${FW_PATH}.bak/*.txt ${FW_PATH}/ &> /dev/null
 		cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
 		echo "If no errors appeared, your firmware was successfully setup"
