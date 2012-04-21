@@ -1,0 +1,35 @@
+#!/bin/bash
+
+FW_REPO="git://github.com/Hexxeh/rpi-firmware.git"
+FW_PATH="/boot"
+FW_RAM=${1:-224}
+FW_GPU=$((256-FW_RAM))
+
+echo "Raspberry Pi firmware updater by Hexxeh"
+echo "Using memory split of ${FW_RAM}MB/${FW_GPU}MB"
+
+GITCMD="git --git-dir=${FW_PATH}/.git --work-tree=${FW_PATH}"
+
+if $($GITCMD rev-parse &> /dev/null); then
+	echo "Updating firmware (this will take a few minutes)"
+	rm -f ${FW_PATH}/start.elf
+	$GITCMD fetch --quiet
+	$GITCMD merge origin/master --no-edit --quiet
+	cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
+	echo "If no errors appeared, your firmware was successfully updated"
+else
+	echo "We're running for the first time"
+	echo "Setting up firmware (this will take a few minutes)"
+	cp -R ${FW_PATH} ${FW_PATH}.bak
+	rm -rf /boot/*
+	git clone ${FW_REPO} ${FW_PATH} --depth=1 --quiet
+	RETVAL=$?
+	if [[ $RETVAL != 0 ]]; then
+		echo "We failed! Attmepting to restore your original firmware"
+		cp -R ${FW_PATH}.bak ${FW_PATH}
+	else
+		cp ${FW_PATH}.bak/*.txt ${FW_PATH}/ &> /dev/null
+		cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
+		echo "If no errors appeared, your firmware was successfully setup"
+	fi
+fi
