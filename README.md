@@ -5,11 +5,15 @@ An easier way to update the firmware of your Raspberry Pi
 
 To install the tool, run the following command as root:
 
+<pre>
 wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update --quiet && chmod +x /usr/bin/rpi-update
+</pre>
 
 To then update your firmware, simply run the following command as root:
 
+<pre>
 rpi-update
+</pre>
 
 After the firmware has been sucessfully updated, you'll need to reobot to load the new firmware.
 
