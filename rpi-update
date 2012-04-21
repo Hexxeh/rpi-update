@@ -8,9 +8,16 @@ FW_GPU=$((256-FW_RAM))
 echo "Raspberry Pi firmware updater by Hexxeh"
 
 if [[ $EUID -ne 0 ]]; then
-	echo "This tool must be run as root" 1>&2
+	echo "This tool must be run as root"
 	exit 1
 fi
+
+command -v git >/dev/null 2>&1 || {
+	echo "This tool requires you have Git installed, please install it first"
+	echo "In Debian, try: sudo apt-get install git-core"
+	echo "In Arch, try: pacman -Sy git"
+	exit 1
+}
 
 echo "Using memory split of ${FW_RAM}MB/${FW_GPU}MB"
 
