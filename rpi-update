@@ -27,7 +27,7 @@ function update_self() {
 	tail --lines=+2 "$_payloadName" >> "$_tempFileName"
 	rm "$_payloadName"
  
-	OCTAL_MODE=$(stat -c '%a' $SELF)
+	OCTAL_MODE=$(stat -c '%a' $0)
 	if ! chmod $OCTAL_MODE "$_tempFileName" ; then
   		echo "Failed: Error while trying to set mode on $_tempFileName."
 		exit 1
