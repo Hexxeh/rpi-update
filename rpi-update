@@ -37,6 +37,7 @@ if $($GITCMD rev-parse &> /dev/null); then
 	cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
 	cp -R ${FW_PATH}/modules/* /lib/modules/
 	do_depmod
+	sync
 	echo "If no errors appeared, your firmware was successfully updated"
 else
 	echo "We're running for the first time"
@@ -53,6 +54,7 @@ else
 		do_depmod
 		cp ${FW_PATH}.bak/*.txt ${FW_PATH}/ &> /dev/null
 		cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
+		sync
 		echo "If no errors appeared, your firmware was successfully setup"
 	fi
 fi
