@@ -6,6 +6,12 @@ FW_RAM=${1:-224}
 FW_GPU=$((256-FW_RAM))
 
 echo "Raspberry Pi firmware updater by Hexxeh"
+
+if [[ $EUID -ne 0 ]]; then
+	echo "This tool must be run as root" 1>&2
+	exit 1
+fi
+
 echo "Using memory split of ${FW_RAM}MB/${FW_GPU}MB"
 
 GITCMD="git --git-dir=${FW_PATH}/.git --work-tree=${FW_PATH}"
