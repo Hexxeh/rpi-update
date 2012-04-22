@@ -53,8 +53,8 @@ function update_modules {
 }
 
 function update_sdk {
-	ELFOUTPUT=`readelf -A /bin/bash`
-	if [ "$ELFOUTPUT" != "${ELFOUTPUT/HardFP/}" ]; then
+	ELFOUTPUT=`readelf -a /bin/bash`
+	if [ "$ELFOUTPUT" != "${ELFOUTPUT/VFP_args/}" ]; then
 		echo "Using HardFP libraries"
 		cp -R ${FW_PATH}/vc/hardfp/* /
 	else
