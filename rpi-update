@@ -45,10 +45,31 @@ EOF
 	exec /bin/bash updateScript.sh "$@"
 }
 
-function do_depmod {
+function update_modules {
+	cp -R ${FW_PATH}/modules/* /lib/modules/
 	for D in `find ${FW_PATH}/modules -mindepth 1 -maxdepth 1 -type d`; do
 		depmod -a `basename $D`
 	done
+}
+
+function update_sdk {
+	ELFOUTPUT=`readelf -A /bin/bash`
+	if [ "$ELFOUTPUT" != "${ELFOUTPUT/HardFP/}" ]; then
+		echo "Using HardFP libraries"
+		cp -R ${FW_PATH}/vc/hardfp/* /
+	else
+		echo "Using SoftFP libraries"
+		cp -R ${FW_PATH}/vc/softfp/* /
+	fi
+	cp -R ${FW_PATH}/vc/sdk/* /
+}
+
+function restore_configs {
+	cp ${FW_PATH}.bak/*.txt ${FW_PATH}/ &> /dev/null
+}
+
+function set_split {
+	cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
 }
 
 if [[ $EUID -ne 0 ]]; then
@@ -68,6 +89,13 @@ command -v git >/dev/null 2>&1 || {
 	exit 1
 }
 
+command -v readelf >/dev/null 2>&1 || {
+	echo "This tool requires you have readelf installed, please install it first"
+	echo "In Debian, try: sudo apt-get install readelf"
+	echo "In Arch, try: pacman -Sy readelf"
+	exit 1
+}
+
 echo "Using memory split of ${FW_RAM}MB/${FW_GPU}MB"
 
 GITCMD="git --git-dir=${FW_PATH}/.git --work-tree=${FW_PATH}"
@@ -76,27 +104,27 @@ if $($GITCMD rev-parse &> /dev/null); then
 	echo "Updating firmware (this will take a few minutes)"
 	rm -f ${FW_PATH}/start.elf
 	$GITCMD fetch --quiet
-	$GITCMD merge origin/master --no-edit --quiet
-	cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
-	cp -R ${FW_PATH}/modules/* /lib/modules/
-	do_depmod
+	$GITCMD merge origin/master -m "automerge" --quiet
+	update_modules
+	update_sdk
+	set_split
 	sync
 	echo "If no errors appeared, your firmware was successfully updated"
 else
 	echo "We're running for the first time"
 	echo "Setting up firmware (this will take a few minutes)"
 	cp -R ${FW_PATH} ${FW_PATH}.bak
-	rm -rf /boot/*
+	rm -rf /boot &> /dev/null
 	git clone ${FW_REPO} ${FW_PATH} --depth=1 --quiet
 	RETVAL=$?
 	if [[ $RETVAL != 0 ]]; then
 		echo "We failed! Attmepting to restore your original firmware"
-		cp -R ${FW_PATH}.bak ${FW_PATH}
+		cp -R ${FW_PATH}.bak/* ${FW_PATH}/
 	else
-		cp -R ${FW_PATH}/modules/* /lib/modules/
-		do_depmod
-		cp ${FW_PATH}.bak/*.txt ${FW_PATH}/ &> /dev/null
-		cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
+		update_modules
+		update_sdk
+		restore_configs
+		set_split
 		sync
 		echo "If no errors appeared, your firmware was successfully setup"
 	fi
