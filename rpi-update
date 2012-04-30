@@ -82,6 +82,9 @@ if [[ $UPDATE -ne 0 ]]; then
 	update_self
 fi
 
+echo "Come back later, rpi-update needs patching up"
+exit 0
+
 command -v git >/dev/null 2>&1 || {
 	echo "This tool requires you have Git installed, please install it first"
 	echo "In Debian, try: sudo apt-get install git-core"
