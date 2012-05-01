@@ -6,7 +6,7 @@ set -o errexit
 UPDATE=${2:-1}
 UPDATE_URI="https://raw.github.com/Hexxeh/rpi-update/master/rpi-update"
 FW_REPO="git://github.com/Hexxeh/rpi-firmware.git"
-FW_REPOLOCAL="~/.rpi-firmware"
+FW_REPOLOCAL="/root/.rpi-firmware"
 FW_PATH="/boot"
 FW_REPONAME=`basename ${FW_REPOLOCAL}`
 FW_RAM=${1:-224}
