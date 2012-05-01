@@ -6,7 +6,9 @@ set -o errexit
 UPDATE=${2:-1}
 UPDATE_URI="https://raw.github.com/Hexxeh/rpi-update/master/rpi-update"
 FW_REPO="git://github.com/Hexxeh/rpi-firmware.git"
+FW_REPOLOCAL="~/.rpi-firmware"
 FW_PATH="/boot"
+FW_REPONAME=`basename ${FW_REPOLOCAL}`
 FW_RAM=${1:-224}
 FW_GPU=$((256-FW_RAM))
 
@@ -46,8 +48,8 @@ EOF
 }
 
 function update_modules {
-	cp -R ${FW_PATH}/modules/* /lib/modules/
-	for D in `find ${FW_PATH}/modules -mindepth 1 -maxdepth 1 -type d`; do
+	cp -R ${FW_REPOLOCAL}/modules/* /lib/modules/
+	for D in `find ${FW_REPOLOCAL}/modules -mindepth 1 -maxdepth 1 -type d`; do
 		depmod -a `basename $D`
 	done
 }
@@ -56,20 +58,21 @@ function update_sdk {
 	ELFOUTPUT=`readelf -a /bin/bash`
 	if [ "$ELFOUTPUT" != "${ELFOUTPUT/VFP_args/}" ]; then
 		echo "Using HardFP libraries"
-		cp -R ${FW_PATH}/vc/hardfp/* /
+		cp -R ${FW_REPOLOCAL}/vc/hardfp/* /
 	else
 		echo "Using SoftFP libraries"
-		cp -R ${FW_PATH}/vc/softfp/* /
+		cp -R ${FW_REPOLOCAL}/vc/softfp/* /
 	fi
-	cp -R ${FW_PATH}/vc/sdk/* /
-}
-
-function restore_configs {
-	cp ${FW_PATH}.bak/*.txt ${FW_PATH}/ &> /dev/null
+	cp -R ${FW_REPOLOCAL}/vc/sdk/* /
 }
 
 function set_split {
-	cp ${FW_PATH}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
+	cp ${FW_REPOLOCAL}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
+}
+
+function update_firmware {
+	cp ${FW_REPOLOCAL}/*.bin ${FW_PATH}/
+	cp ${FW_REPOLOCAL}/*.img ${FW_PATH}/
 }
 
 if [[ $EUID -ne 0 ]]; then
@@ -81,9 +84,6 @@ if [[ $UPDATE -ne 0 ]]; then
 	echo "Raspberry Pi firmware updater by Hexxeh"
 	update_self
 fi
-
-echo "Come back later, rpi-update needs patching up"
-exit 0
 
 command -v git >/dev/null 2>&1 || {
 	echo "This tool requires you have Git installed, please install it first"
@@ -101,13 +101,14 @@ command -v readelf >/dev/null 2>&1 || {
 
 echo "Using memory split of ${FW_RAM}MB/${FW_GPU}MB"
 
-GITCMD="git --git-dir=${FW_PATH}/.git --work-tree=${FW_PATH}"
+GITCMD="git --git-dir=${FW_REPOLOCAL}/.git --work-tree=${FW_REPOLOCAL}"
 
+mkdir -p ${FW_REPOLOCAL}
 if $($GITCMD rev-parse &> /dev/null); then
 	echo "Updating firmware (this will take a few minutes)"
-	rm -f ${FW_PATH}/start.elf
 	$GITCMD fetch --quiet
 	$GITCMD merge origin/master -m "automerge" --quiet
+	update_firmware
 	update_modules
 	update_sdk
 	set_split
@@ -117,16 +118,14 @@ else
 	echo "We're running for the first time"
 	echo "Setting up firmware (this will take a few minutes)"
 	cp -R ${FW_PATH} ${FW_PATH}.bak
-	rm -rf /boot &> /dev/null
-	git clone ${FW_REPO} ${FW_PATH} --depth=1 --quiet
+	git clone ${FW_REPO} ${FW_REPOLOCAL} --depth=1 --quiet
 	RETVAL=$?
 	if [[ $RETVAL != 0 ]]; then
-		echo "We failed! Attmepting to restore your original firmware"
-		cp -R ${FW_PATH}.bak/* ${FW_PATH}/
+		echo "Failed to download new firmware files"
 	else
+		update_firmware
 		update_modules
 		update_sdk
-		restore_configs
 		set_split
 		sync
 		echo "If no errors appeared, your firmware was successfully setup"
