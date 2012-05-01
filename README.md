@@ -6,7 +6,7 @@ An easier way to update the firmware of your Raspberry Pi
 To install the tool, run the following command as root:
 
 <pre>
-wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update --quiet && chmod +x /usr/bin/rpi-update
+wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update && chmod +x /usr/bin/rpi-update
 </pre>
 
 If you get errors relating to certificates, then the problem is likely due to one of two things. Either the time is set incorrectly on your Raspberry Pi, which you can fix by simply setting the time using NTP. The other possible issue is that you might not have the ca-certificates package installed, and so GitHub's SSL certificate isn't trusted. If you're on Debian, you can resolve this by typing:
