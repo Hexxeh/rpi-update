@@ -18,8 +18,8 @@ function update_self() {
 	_payloadName="$0.payload"
  
 	if ! wget --quiet --output-document="$_payloadName" $UPDATE_URI ; then
-		echo "Failed: Error while trying to wget new version!"
-		echo "File requested: $UPDATE_URI"
+		echo "Failed to download update for rpi-update!"
+		echo "Make sure you have ca-certificates installed and that the time is set correctly"
 		exit 1
 	fi
  
@@ -75,6 +75,11 @@ function update_firmware {
 	cp ${FW_REPOLOCAL}/*.img ${FW_PATH}/
 }
 
+function finalise {
+	ldconfig
+	sync
+}
+
 if [[ $EUID -ne 0 ]]; then
 	echo "This tool must be run as root"
 	exit 1
@@ -94,8 +99,8 @@ command -v git >/dev/null 2>&1 || {
 
 command -v readelf >/dev/null 2>&1 || {
 	echo "This tool requires you have readelf installed, please install it first"
-	echo "In Debian, try: sudo apt-get install readelf"
-	echo "In Arch, try: pacman -Sy readelf"
+	echo "In Debian, try: sudo apt-get install binutils"
+	echo "In Arch, try: pacman -Sy binutils"
 	exit 1
 }
 
@@ -112,7 +117,7 @@ if $($GITCMD rev-parse &> /dev/null); then
 	update_modules
 	update_sdk
 	set_split
-	sync
+	finalise
 	echo "If no errors appeared, your firmware was successfully updated"
 else
 	echo "We're running for the first time"
@@ -127,7 +132,7 @@ else
 		update_modules
 		update_sdk
 		set_split
-		sync
+		finalise
 		echo "If no errors appeared, your firmware was successfully setup"
 	fi
 fi
