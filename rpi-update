@@ -71,6 +71,7 @@ function set_split {
 }
 
 function update_firmware {
+	cp ${FW_REPOLOCAL}/*.elf ${FW_PATH}/
 	cp ${FW_REPOLOCAL}/*.bin ${FW_PATH}/
 	cp ${FW_REPOLOCAL}/*.img ${FW_PATH}/
 }
@@ -93,14 +94,14 @@ fi
 command -v git >/dev/null 2>&1 || {
 	echo "This tool requires you have Git installed, please install it first"
 	echo "In Debian, try: sudo apt-get install git-core"
-	echo "In Arch, try: pacman -Sy git"
+	echo "In Arch, try: pacman -S git"
 	exit 1
 }
 
 command -v readelf >/dev/null 2>&1 || {
 	echo "This tool requires you have readelf installed, please install it first"
 	echo "In Debian, try: sudo apt-get install binutils"
-	echo "In Arch, try: pacman -Sy binutils"
+	echo "In Arch, try: pacman -S binutils"
 	exit 1
 }
 
