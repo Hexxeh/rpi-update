@@ -3,92 +3,186 @@
 set -o nounset
 set -o errexit
 
-UPDATE=${2:-1}
-UPDATE_URI="https://raw.github.com/Hexxeh/rpi-update/master/rpi-update"
+UPDATE=${UPDATE:-1}
+UPDATE_URI="https://github.com/Hexxeh/rpi-update/raw/master/rpi-update"
+
+ROOT_PATH=${ROOT_PATH:-"/"}
+BOOT_PATH=${BOOT_PATH:-"/boot"}
+SKIP_KERNEL=${SKIP_KERNEL:-0}
 FW_REPO="git://github.com/Hexxeh/rpi-firmware.git"
-FW_REPOLOCAL="/root/.rpi-firmware"
-FW_PATH="/boot"
-FW_REPONAME=`basename ${FW_REPOLOCAL}`
-FW_RAM=${1:-224}
-FW_GPU=$((256-FW_RAM))
+FW_REPOLOCAL="${ROOT_PATH}/root/.rpi-firmware"
+FW_PATH="${BOOT_PATH}"
+FW_MODPATH="${ROOT_PATH}/lib/modules"
+FW_RAM=${1:-0}
+GITCMD="git --git-dir=\"${FW_REPOLOCAL}/.git\" --work-tree=\"${FW_REPOLOCAL}\""
+
+function detect_split() {
+	if [[ -f "$FW_PATH/start.elf" && ${FW_RAM} -eq 0 ]]; then
+		FW_RAM=224
+		for R in 128 192 224
+		do
+			if [[ -f "$FW_PATH/arm${R}_start.elf" ]]
+			then
+      				if diff "$FW_PATH/arm${R}_start.elf" "$FW_PATH/start.elf" >/dev/null
+      				then
+        				FW_RAM=$R
+        				break
+      				fi
+			fi
+		done
+	fi
+	FW_GPU=$((256-FW_RAM))
+}
 
 function update_self() {
-	echo "Performing self-update" 
+	echo "Performing self-update"
 	_tempFileName="$0.tmp"
-	_payloadName="$0.payload"
- 
-	if ! wget --quiet --output-document="$_payloadName" $UPDATE_URI ; then
+
+	if ! wget --quiet --output-document="${_tempFileName}" "${UPDATE_URI}"; then
 		echo "Failed to download update for rpi-update!"
 		echo "Make sure you have ca-certificates installed and that the time is set correctly"
 		exit 1
 	fi
- 
-	_interpreter=$(head --lines=1 "$0")
-	echo $_interpreter > "$_tempFileName"
-	tail --lines=+2 "$_payloadName" >> "$_tempFileName"
-	rm "$_payloadName"
- 
-	OCTAL_MODE=$(stat -c '%a' $0)
-	if ! chmod $OCTAL_MODE "$_tempFileName" ; then
-  		echo "Failed: Error while trying to set mode on $_tempFileName."
+
+	OCTAL_MODE=$(stat -c '%a' "$0")
+	if ! chmod ${OCTAL_MODE} "${_tempFileName}" ; then
+  		echo "Failed: Error while trying to set mode on ${_tempFileName}"
 		exit 1
 	fi
 
-	cat > updateScript.sh << EOF
+	cat > /tmp/updateScript.sh << EOF
 	#!/bin/bash
-	if mv "$_tempFileName" "$0"; then
-		rm -- \$0
-		exec /bin/bash $0 ${FW_RAM} 0
+	if mv "${_tempFileName}" "$0"; then
+		rm -- "\$0"
+		exec env UPDATE=0 /bin/bash "$0" "$@"
 	else
 		echo "Failed!"
 	fi
 EOF
- 
-	exec /bin/bash updateScript.sh "$@"
+
+	exec /bin/bash /tmp/updateScript.sh
 }
 
 function update_modules {
-	cp -R ${FW_REPOLOCAL}/modules/* /lib/modules/
-	for D in `find ${FW_REPOLOCAL}/modules -mindepth 1 -maxdepth 1 -type d`; do
-		depmod -a `basename $D`
-	done
+	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
+		cp -R "${FW_REPOLOCAL}/modules/"* "${FW_MODPATH}/"
+		find "${FW_REPOLOCAL}/modules" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
+			depmod -b "${ROOT_PATH}" -a $(basename "${DIR}")
+		done
+	fi
 }
 
 function update_sdk {
-	ELFOUTPUT=`readelf -a /bin/bash`
-	if [ "$ELFOUTPUT" != "${ELFOUTPUT/VFP_args/}" ]; then
+	if [[ -f /etc/init.d/vcfiled ]]; then
+		/etc/init.d/vcfiled stop
+	fi
+
+	ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/bash")
+	if [ "${ELFOUTPUT}" != "${ELFOUTPUT/VFP_args/}" ]; then
 		echo "Using HardFP libraries"
-		cp -R ${FW_REPOLOCAL}/vc/hardfp/* /
+		cp -R "${FW_REPOLOCAL}/vc/hardfp/"* "${ROOT_PATH}/"
 	else
 		echo "Using SoftFP libraries"
-		cp -R ${FW_REPOLOCAL}/vc/softfp/* /
+		cp -R "${FW_REPOLOCAL}/vc/softfp/"* "${ROOT_PATH}/"
 	fi
-	cp -R ${FW_REPOLOCAL}/vc/sdk/* /
+	cp -R "${FW_REPOLOCAL}/vc/sdk/"* "${ROOT_PATH}/"
+
+	if [[ -f /etc/init.d/vcfiled ]]; then
+		/etc/init.d/vcfiled start
+	fi
 }
 
 function set_split {
-	cp ${FW_REPOLOCAL}/arm${FW_RAM}_start.elf ${FW_PATH}/start.elf
+	cp "${FW_PATH}/arm${FW_RAM}_start.elf" "${FW_PATH}/start.elf"
 }
 
 function update_firmware {
-	cp ${FW_REPOLOCAL}/*.elf ${FW_PATH}/
-	cp ${FW_REPOLOCAL}/*.bin ${FW_PATH}/
-	cp ${FW_REPOLOCAL}/*.img ${FW_PATH}/
+	cp "${FW_REPOLOCAL}/"*.elf "${FW_PATH}/"
+	cp "${FW_REPOLOCAL}/"*.bin "${FW_PATH}/"
+	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
+		cp "${FW_REPOLOCAL}/"*.img "${FW_PATH}/"
+	else
+		echo "Skipping kernel/modules updated as requested"
+	fi
 }
 
 function finalise {
-	ldconfig
+	ldconfig -r "${ROOT_PATH}"
+	eval ${GITCMD} rev-parse master > "${FW_PATH}/.firmware_revision"
 	sync
 }
 
-if [[ $EUID -ne 0 ]]; then
+function download_repo {
+	echo "Setting up firmware (this will take a few minutes)"
+	mkdir -p "${FW_REPOLOCAL}"
+	git clone "${FW_REPO}" "${FW_REPOLOCAL}" --depth=1 --quiet
+	RETVAL=$?
+	if [[ ${RETVAL} -ne 0 ]]; then
+		echo "Failed to download new firmware files"
+		exit 1
+	fi
+}
+
+function update_repo {
+	echo "Updating firmware (this will take a few minutes)"
+	eval ${GITCMD} fetch --quiet
+	RETVAL=$?
+	if [[ ${RETVAL} -ne 0 ]]; then
+		echo "Failed to download updated firmware files"
+		exit 1
+	fi
+	eval ${GITCMD} merge origin/master -m "automerge" --quiet
+	RETVAL=$?
+	if [[ ${RETVAL} -ne 0 ]]; then
+		echo "Failed to download updated firmware files"
+		exit 1
+	fi
+}
+
+function do_backup {
+	cp -a "${FW_PATH}" "${FW_PATH}.bak"
+	cp -a "${FW_MODPATH}" "${FW_MODPATH}.bak"
+}
+
+function do_update {
+	update_firmware
+	update_modules
+	update_sdk
+	set_split
+	finalise
+	echo "If no errors appeared, your firmware was successfully $1"
+	if [[ "${ROOT_PATH}" == "/" ]]; then
+		echo "A reboot is needed to activate the new firmware"
+	fi
+}
+
+if [[ ${EUID} -ne 0 ]]; then
 	echo "This tool must be run as root"
 	exit 1
 fi
 
-if [[ $UPDATE -ne 0 ]]; then
-	echo "Raspberry Pi firmware updater by Hexxeh"
+if [[ ${UPDATE} -ne 0 ]]; then
+	echo "Raspberry Pi firmware updater by Hexxeh, enhanced by AndrewS"
 	update_self
+fi
+
+if [[ ( "${ROOT_PATH}" == "/"  &&  "${BOOT_PATH}" != "/boot" ) ]] ||
+[[ ( "${BOOT_PATH}" == "/boot"  &&  "${ROOT_PATH}" != "/" ) ]]; then
+	echo "You need to specify both ROOT_PATH and BOOT_PATH, or neither"
+	exit 1
+fi
+
+if [[ ! -d "${FW_PATH}" ]]; then
+	echo "${FW_PATH} doesn't exist"
+	exit 1
+fi
+if [[ ! -f "${FW_PATH}/start.elf" ]]; then
+	echo "${FW_PATH}/start.elf doesn't exist."
+	exit 1
+fi
+if [[ ! -d "${FW_MODPATH}" ]]; then
+	echo "${FW_MODPATH} doesn't exist"
+	exit 1
 fi
 
 command -v git >/dev/null 2>&1 || {
@@ -105,35 +199,25 @@ command -v readelf >/dev/null 2>&1 || {
 	exit 1
 }
 
-echo "Using memory split of ${FW_RAM}MB/${FW_GPU}MB"
+detect_split
+if [[ ${FW_RAM} -ne 224 ]] && [[ ${FW_RAM} -ne 192 ]] && [[ ${FW_RAM} -ne 128 ]]; then
+	echo "RAM value must be one of: 224, 192, 128"
+	exit 1
+fi
+echo "Using ARM/GPU memory split of ${FW_RAM}MB/${FW_GPU}MB"
 
-GITCMD="git --git-dir=${FW_REPOLOCAL}/.git --work-tree=${FW_REPOLOCAL}"
-
-mkdir -p ${FW_REPOLOCAL}
-if $($GITCMD rev-parse &> /dev/null); then
-	echo "Updating firmware (this will take a few minutes)"
-	$GITCMD fetch --quiet
-	$GITCMD merge origin/master -m "automerge" --quiet
-	update_firmware
-	update_modules
-	update_sdk
-	set_split
-	finalise
-	echo "If no errors appeared, your firmware was successfully updated"
-else
-	echo "We're running for the first time"
-	echo "Setting up firmware (this will take a few minutes)"
-	cp -R ${FW_PATH} ${FW_PATH}.bak
-	git clone ${FW_REPO} ${FW_REPOLOCAL} --depth=1 --quiet
-	RETVAL=$?
-	if [[ $RETVAL != 0 ]]; then
-		echo "Failed to download new firmware files"
-	else
-		update_firmware
-		update_modules
-		update_sdk
+if [[ -f "${FW_REPOLOCAL}/.git/config" ]]; then
+	update_repo
+	if [[ -f "${FW_PATH}/.firmware_revision" ]] && [[ $(cat "${FW_PATH}/.firmware_revision") == $(eval ${GITCMD} rev-parse master) ]]; then
+		echo "Your firmware is already up to date"
 		set_split
 		finalise
-		echo "If no errors appeared, your firmware was successfully setup"
+	else
+		do_update "updated"
 	fi
+else
+	echo "We're running for the first time"
+	download_repo
+	do_backup
+	do_update "setup"
 fi
