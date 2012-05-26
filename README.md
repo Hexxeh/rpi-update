@@ -3,6 +3,9 @@ rpi-update
 
 An easier way to update the firmware of your Raspberry Pi
 
+Instructions
+------------
+
 To install the tool, run the following command as root:
 
 <pre>
