@@ -18,6 +18,7 @@ GITCMD="git --git-dir=\"${FW_REPOLOCAL}/.git\" --work-tree=\"${FW_REPOLOCAL}\""
 
 function detect_split() {
 	if [[ -f "$FW_PATH/start.elf" && ${FW_RAM} -eq 0 ]]; then
+		echo "Autodetecting memory split"
 		FW_RAM=224
 		for R in 128 192 224
 		do
@@ -54,7 +55,7 @@ function update_self() {
 	#!/bin/bash
 	if mv "${_tempFileName}" "$0"; then
 		rm -- "\$0"
-		exec env UPDATE=0 /bin/bash "$0" "$@"
+		exec env UPDATE=0 /bin/bash "$0" "$FW_RAM"
 	else
 		echo "Failed!"
 	fi
