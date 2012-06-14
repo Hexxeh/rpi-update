@@ -12,11 +12,23 @@ To install the tool, run the following command as root:
 wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update && chmod +x /usr/bin/rpi-update
 </pre>
 
-If you get errors relating to certificates, then the problem is likely due to one of two things. Either the time is set incorrectly on your Raspberry Pi, which you can fix by simply setting the time using NTP. The other possible issue is that you might not have the ca-certificates package installed, and so GitHub's SSL certificate isn't trusted. If you're on Debian, you can resolve this by typing:
+If you're using debian, you should prefix the above with the sudo command to run as root, so it should look like:
+<pre>
+sudo wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update && sudo chmod +x /usr/bin/rpi-update
+</pre>
+
+If you get errors relating to certificates, then the problem is likely due to one of two things. Either the time is set incorrectly on your Raspberry Pi, which you can fix by simply setting the time using the date command or NTP. The other possible issue is that you might not have the ca-certificates package installed, and so GitHub's SSL certificate isn't trusted. If you're on Debian, you can resolve this by typing:
 
 <pre>
 sudo apt-get install ca-certificates
 </pre>
+
+Also if you haven't done so already, it is a good idea to have updated/upgraded your library packages first by running (in debian):
+
+<pre>
+sudo apt-get update && sudo apt-get upgrade
+</pre>
+
 
 To then update your firmware, simply run the following command as root:
 
