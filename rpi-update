@@ -146,9 +146,13 @@ function do_backup {
 }
 
 function do_update {
+	echo "Updating firmware"
 	update_firmware
+	echo "Updating modules"
 	update_modules
+	echo "Updating SDK"
 	update_sdk
+	echo "Almost done, final tweaks"
 	set_split
 	finalise
 	echo "If no errors appeared, your firmware was successfully $1"
