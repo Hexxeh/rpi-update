@@ -1,65 +1,75 @@
-rpi-update
-==========
+# rpi-update
 
 An easier way to update the firmware of your Raspberry Pi
 
-Instructions
-------------
+## Status
 
-To install the tool, run the following command as root:
+This tool is experimental, and may screw up your install. If you have problems
+with it, post an issue to this GitHub repo and I'll see if I can help you.
 
-<pre>
-wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update && chmod +x /usr/bin/rpi-update
-</pre>
+## Preparations
 
-If you get errors relating to certificates, then the problem is likely due to one of two things. Either the time is set incorrectly on your Raspberry Pi, which you can fix by simply setting the time using NTP. The other possible issue is that you might not have the ca-certificates package installed, and so GitHub's SSL certificate isn't trusted. If you're on Debian, you can resolve this by typing:
+To prevent errors relating certificates, one can fix two possible problems.
 
-<pre>
-sudo apt-get install ca-certificates
-</pre>
+-   Either the time is set incorrectly on your Raspberry Pi, which you can fix
+    by simply setting the time using NTP.
 
-To then update your firmware, simply run the following command as root:
+        sudo ntpdate -u ntp.ubuntu.com
 
-<pre>
-rpi-update
-</pre>
+-   The other possible issue is that you might not have the ca-certificates
+    package installed, and so GitHub's SSL certificate isn't trusted. If you are
+    on Debian, you can resolve this by typing:
 
+        sudo apt-get install ca-certificates
 
-By default, rpi-update will attempt to determine the split you're currently using, and then use that split. If it cannot determine what split you are using, it will default to 224MB.
+## Installing
 
-If you'd like to explicitly select a split, simply provide the RAM split value after the command as follows:
+To install the tool, run the following command:
 
-<pre>
-rpi-update 192
-</pre>
+    sudo wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update && chmod +x /usr/bin/rpi-update
 
-If you'd like to use the 128MB memory split, then the command is the same as the above, except with 128 instead of 192.
+## Updating
 
-After the firmware has been sucessfully updated, you'll need to reboot to load the new firmware.
+To then update your firmware, simply run the following command:
 
-This tool is experimental, and may screw up your install. If you have problems with it, post an issue to this GitHub repo and I'll see if I can help you.
+    sudo rpi-update
+    
+### Options
 
-Expert options
---------------
+By default, rpi-update will attempt to determine the split you're currently
+using, and then use that split. If it cannot determine what split you are using,
+it will default to 224MB. If you'd like to explicitly select a split, simply
+provide the RAM split value after the command as follows:
 
-There are a number of options for experts you might like to use, these are all environment variables you must set if you wish to use them.
+    sudo rpi-update 192
 
-### SKIP_KERNEL
+If you'd like to use the 128MB memory split, then the command is the same as the
+above, except with 128 instead of 192:
 
-#### Usage
+    sudo rpi-update 128
 
-SKIP_KERNEL=1 rpi-update
+### Environment Variables
 
-#### Effect
+There are a number of options for experts you might like to use, these are all
+environment variables you must set if you wish to use them.
 
-Will update everything EXCEPT the kernel.img files and the kernel modules. Use with caution, some firmware updates might depend a kernel update.
+#### SKIP_KERNEL
 
-### ROOT_PATH/BOOT_PATH
+    sudo SKIP_KERNEL=1 rpi-update
 
-#### Usage
+Will update everything **except** the kernel.img files and the kernel modules.
+Use with caution, some firmware updates might depend a kernel update.
 
-ROOT_PATH=/media/root BOOT_PATH=/media/boot rpi-update
+#### ROOT_PATH/BOOT_PATH
 
-#### Effect
+    sudo ROOT_PATH=/media/root BOOT_PATH=/media/boot rpi-update
 
-Allows you to perform an "offline" update, ie update firmware on an SD card you're not currently booted from. Useful for installing firmware/kernel to a non-RPI customised image. Be careful, you must specify both options or neither. Specifying only one will not work.
+Allows you to perform an "offline" update, ie update firmware on an SD card you
+are not currently booted from. Useful for installing firmware/kernel to a
+non-RPI customised image. Be careful, you must specify both options or neither.
+Specifying only one will not work.
+
+## Activating
+
+After the firmware has been sucessfully updated, you'll need to reboot to load
+the new firmware.
