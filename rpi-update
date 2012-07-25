@@ -19,8 +19,8 @@ GITCMD="git --git-dir=\"${FW_REPOLOCAL}/.git\" --work-tree=\"${FW_REPOLOCAL}\""
 function detect_split() {
 	if [[ -f "$FW_PATH/start.elf" && ${FW_RAM} -eq 0 ]]; then
 		echo "Autodetecting memory split"
-		FW_RAM=224
-		for R in 128 192 224
+		FW_RAM=240
+		for R in 128 192 224 240
 		do
 			if [[ -f "$FW_PATH/arm${R}_start.elf" ]]
 			then
@@ -201,8 +201,8 @@ command -v readelf >/dev/null 2>&1 || {
 }
 
 detect_split
-if [[ ${FW_RAM} -ne 224 ]] && [[ ${FW_RAM} -ne 192 ]] && [[ ${FW_RAM} -ne 128 ]]; then
-	echo "RAM value must be one of: 224, 192, 128"
+if [[ ${FW_RAM} -ne 240 ]] &&[[ ${FW_RAM} -ne 224 ]] && [[ ${FW_RAM} -ne 192 ]] && [[ ${FW_RAM} -ne 128 ]]; then
+	echo "RAM value must be one of: 240, 224, 192, 128"
 	exit 1
 fi
 echo "Using ARM/GPU memory split of ${FW_RAM}MB/${FW_GPU}MB"
