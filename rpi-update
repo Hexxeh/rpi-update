@@ -3,7 +3,7 @@
 set -o nounset
 set -o errexit
 
-REPO_URI="http://github.com/Hexxeh/rpi-update"
+REPO_URI="http://github.com/Hexxeh/rpi-firmware"
 
 UPDATE=${UPDATE:-1}
 UPDATE_URI="https://github.com/Hexxeh/rpi-update/raw/master/rpi-update"
