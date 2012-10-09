@@ -3,17 +3,20 @@
 set -o nounset
 set -o errexit
 
+REPO_URI="http://github.com/Hexxeh/rpi-firmware"
+
 UPDATE=${UPDATE:-1}
 UPDATE_URI="https://github.com/Hexxeh/rpi-update/raw/master/rpi-update"
 
 ROOT_PATH=${ROOT_PATH:-"/"}
 BOOT_PATH=${BOOT_PATH:-"/boot"}
 SKIP_KERNEL=${SKIP_KERNEL:-0}
-FW_REPO="http://github.com/Hexxeh/rpi-firmware.git"
+FW_REPO="${REPO_URI}/rpi-firmware.git"
 FW_REPOLOCAL="${ROOT_PATH}/root/.rpi-firmware"
 FW_PATH="${BOOT_PATH}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
 FW_RAM=${1:-0}
+FW_REV=${2:-""}
 GITCMD="git --git-dir=\"${FW_REPOLOCAL}/.git\" --work-tree=\"${FW_REPOLOCAL}\""
 
 function detect_split() {
@@ -132,6 +135,8 @@ function update_repo {
 		echo "Failed to download updated firmware files"
 		exit 1
 	fi
+	eval ${GITCMD} reset --hard --quiet
+	eval ${GITCMD} clean -f -d --quiet
 	eval ${GITCMD} merge origin/master -m "automerge" --quiet
 	RETVAL=$?
 	if [[ ${RETVAL} -ne 0 ]]; then
@@ -155,6 +160,14 @@ function do_update {
 	if [[ "${ROOT_PATH}" == "/" ]]; then
 		echo "A reboot is needed to activate the new firmware"
 	fi
+}
+
+function download_rev {
+	echo "Downloading specific firmware revision (this will take a few minutes)"
+	mkdir -p "${FW_REPOLOCAL}"
+	wget -q "${REPO_URI}/tarball/${FW_REV}" -O "${FW_REPOLOCAL}/${FW_REV}.tar.gz"
+	tar xzf "${FW_REPOLOCAL}/${FW_REV}.tar.gz" -C "${FW_REPOLOCAL}" --strip-components=1
+	rm "${FW_REPOLOCAL}/${FW_REV}.tar.gz"
 }
 
 if [[ ${EUID} -ne 0 ]]; then
@@ -206,8 +219,10 @@ if [[ ${FW_RAM} -ne 240 ]] &&[[ ${FW_RAM} -ne 224 ]] && [[ ${FW_RAM} -ne 192 ]] 
 	exit 1
 fi
 echo "Using ARM/GPU memory split of ${FW_RAM}MB/${FW_GPU}MB"
-
-if [[ -f "${FW_REPOLOCAL}/.git/config" ]]; then
+if [[ ${FW_REV} != "" ]]; then
+	download_rev
+	do_update "updated to revision ${FW_REV}"
+elif [[ -f "${FW_REPOLOCAL}/.git/config" ]]; then
 	update_repo
 	if [[ -f "${FW_PATH}/.firmware_revision" ]] && [[ $(cat "${FW_PATH}/.firmware_revision") == $(eval ${GITCMD} rev-parse master) ]]; then
 		echo "Your firmware is already up to date"
