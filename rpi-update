@@ -219,7 +219,7 @@ if [[ ${FW_RAM} -ne 240 ]] &&[[ ${FW_RAM} -ne 224 ]] && [[ ${FW_RAM} -ne 192 ]] 
 	exit 1
 fi
 echo "Using ARM/GPU memory split of ${FW_RAM}MB/${FW_GPU}MB"
-if [[ "${FW_REV}" != "" ]]; then
+if [ "${FW_REV}" != "" ]; then
 	download_rev
 	do_update "updated to revision ${FW_REV}"
 elif [[ -f "${FW_REPOLOCAL}/.git/config" ]]; then
