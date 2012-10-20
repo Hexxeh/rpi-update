@@ -6,7 +6,7 @@ set -o errexit
 REPO_URI="http://github.com/Hexxeh/rpi-firmware"
 
 UPDATE=${UPDATE:-1}
-UPDATE_URI="https://github.com/Hexxeh/rpi-update/raw/master/rpi-update"
+UPDATE_URI="https://github.com/DanyO/rpi-update/raw/master/rpi-update"
 
 ROOT_PATH=${ROOT_PATH:-"/"}
 BOOT_PATH=${BOOT_PATH:-"/boot"}
@@ -23,7 +23,7 @@ function detect_split() {
 	if [[ -f "$FW_PATH/start.elf" && ${FW_RAM} -eq 0 ]]; then
 		echo "Autodetecting memory split"
 		FW_RAM=240
-		for R in 128 192 224 240
+		for R in 128 192 224 240 384 448 496
 		do
 			if [[ -f "$FW_PATH/arm${R}_start.elf" ]]
 			then
@@ -214,8 +214,8 @@ command -v readelf >/dev/null 2>&1 || {
 }
 
 detect_split
-if [[ ${FW_RAM} -ne 240 ]] &&[[ ${FW_RAM} -ne 224 ]] && [[ ${FW_RAM} -ne 192 ]] && [[ ${FW_RAM} -ne 128 ]]; then
-	echo "RAM value must be one of: 240, 224, 192, 128"
+if [[ ${FW_RAM} -ne 496 ]] && [[ ${FW_RAM} -ne 448 ]] && [[ ${FW_RAM} -ne 384 ]] && [[ ${FW_RAM} -ne 240 ]] && [[ ${FW_RAM} -ne 224 ]] && [[ ${FW_RAM} -ne 192 ]] && [[ ${FW_RAM} -ne 128 ]]; then
+	echo "RAM value must be one of: 496, 448, 396, 240, 224, 192, 128"
 	exit 1
 fi
 echo "Using ARM/GPU memory split of ${FW_RAM}MB/${FW_GPU}MB"
