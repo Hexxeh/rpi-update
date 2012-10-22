@@ -90,6 +90,9 @@ function update_firmware {
 }
 
 function finalise {
+	if [[ -f "${FW_PATH}/arm192_start.elf" ]]; then
+		cp "${FW_PATH}/arm192_start.elf" "${FW_PATH}/start.elf"
+	fi
 	ldconfig -r "${ROOT_PATH}"
 	eval ${GITCMD} rev-parse master > "${FW_PATH}/.firmware_revision"
 	sync
