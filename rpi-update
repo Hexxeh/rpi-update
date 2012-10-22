@@ -38,7 +38,7 @@ function update_self() {
 	#!/bin/bash
 	if mv "${_tempFileName}" "$0"; then
 		rm -- "\$0"
-		exec env UPDATE=0 /bin/bash "$0" "$FW_REV"
+		exec env UPDATE=0 /bin/bash "$0" "${FW_REV}"
 	else
 		echo "Failed!"
 	fi
