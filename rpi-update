@@ -5,7 +5,7 @@ set -o errexit
 
 REPO_URI="http://github.com/Hexxeh/rpi-firmware"
 
-UPDATE=${UPDATE:-1}
+UPDATE2=${UPDATE2:-1}
 UPDATE_URI="https://github.com/Hexxeh/rpi-update/raw/master/rpi-update"
 
 ROOT_PATH=${ROOT_PATH:-"/"}
@@ -38,7 +38,7 @@ function update_self() {
 	#!/bin/bash
 	if mv "${_tempFileName}" "$0"; then
 		rm -- "\$0"
-		exec env UPDATE=0 /bin/bash "$0" "${FW_REV}"
+		exec env UPDATE2=0 /bin/bash "$0" "${FW_REV}"
 	else
 		echo "Failed!"
 	fi
@@ -155,7 +155,7 @@ if [[ ${EUID} -ne 0 ]]; then
 	exit 1
 fi
 
-if [[ ${UPDATE} -ne 0 ]]; then
+if [[ ${UPDATE2} -ne 0 ]]; then
 	echo "Raspberry Pi firmware updater by Hexxeh, enhanced by AndrewS"
 	update_self
 fi
