@@ -15,28 +15,8 @@ FW_REPO="${REPO_URI}.git"
 FW_REPOLOCAL="${ROOT_PATH}/root/.rpi-firmware"
 FW_PATH="${BOOT_PATH}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
-FW_RAM=${1:-0}
-FW_REV=${2:-""}
+FW_REV=${1:-""}
 GITCMD="git --git-dir=\"${FW_REPOLOCAL}/.git\" --work-tree=\"${FW_REPOLOCAL}\""
-
-function detect_split() {
-	if [[ -f "$FW_PATH/start.elf" && ${FW_RAM} -eq 0 ]]; then
-		echo "Autodetecting memory split"
-		FW_RAM=240
-		for R in 128 192 224 240
-		do
-			if [[ -f "$FW_PATH/arm${R}_start.elf" ]]
-			then
-      				if diff "$FW_PATH/arm${R}_start.elf" "$FW_PATH/start.elf" >/dev/null
-      				then
-        				FW_RAM=$R
-        				break
-      				fi
-			fi
-		done
-	fi
-	FW_GPU=$((256-FW_RAM))
-}
 
 function update_self() {
 	echo "Performing self-update"
@@ -58,7 +38,7 @@ function update_self() {
 	#!/bin/bash
 	if mv "${_tempFileName}" "$0"; then
 		rm -- "\$0"
-		exec env UPDATE=0 /bin/bash "$0" "$FW_RAM" "$FW_REV"
+		exec env UPDATE=0 /bin/bash "$0" "$FW_REV"
 	else
 		echo "Failed!"
 	fi
@@ -96,13 +76,14 @@ function update_sdk {
 	fi
 }
 
-function set_split {
-	cp "${FW_PATH}/arm${FW_RAM}_start.elf" "${FW_PATH}/start.elf"
-}
-
 function update_firmware {
-	cp "${FW_REPOLOCAL}/"*.elf "${FW_PATH}/"
-	cp "${FW_REPOLOCAL}/"*.bin "${FW_PATH}/"
+	rm -rf ${FW_REPOLOCAL}/arm_*.elf
+	rm -rf ${FW_REPOLOCAL}/loader.bin
+	rm -rf ${FW_PATH}/arm_*.elf
+	rm -rf ${FW_PATH}/loader.bin
+	cp ${FW_REPOLOCAL}/*.elf "${FW_PATH}/"
+	cp ${FW_REPOLOCAL}/*.bin "${FW_PATH}/"
+	cp ${FW_REPOLOCAL}/*.dat "${FW_PATH}/"
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
 		cp "${FW_REPOLOCAL}/"*.img "${FW_PATH}/"
 	else
@@ -154,7 +135,6 @@ function do_update {
 	update_firmware
 	update_modules
 	update_sdk
-	set_split
 	finalise
 	echo "If no errors appeared, your firmware was successfully $1"
 	if [[ "${ROOT_PATH}" == "/" ]]; then
@@ -213,12 +193,7 @@ command -v readelf >/dev/null 2>&1 || {
 	exit 1
 }
 
-detect_split
-if [[ ${FW_RAM} -ne 240 ]] &&[[ ${FW_RAM} -ne 224 ]] && [[ ${FW_RAM} -ne 192 ]] && [[ ${FW_RAM} -ne 128 ]]; then
-	echo "RAM value must be one of: 240, 224, 192, 128"
-	exit 1
-fi
-echo "Using ARM/GPU memory split of ${FW_RAM}MB/${FW_GPU}MB"
+echo "ARM/GPU split is now defined in /boot/config.txt using the gpu_mem option!"
 if [[ ${FW_REV} != "" ]]; then
 	download_rev
 	do_update "updated to revision ${FW_REV}"
@@ -226,7 +201,6 @@ elif [[ -f "${FW_REPOLOCAL}/.git/config" ]]; then
 	update_repo
 	if [[ -f "${FW_PATH}/.firmware_revision" ]] && [[ $(cat "${FW_PATH}/.firmware_revision") == $(eval ${GITCMD} rev-parse master) ]]; then
 		echo "Your firmware is already up to date"
-		set_split
 		finalise
 	else
 		do_update "updated"
