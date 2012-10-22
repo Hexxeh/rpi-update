@@ -77,7 +77,7 @@ function update_sdk {
 }
 
 function update_firmware {
-	rm -rf ${FW_REPOLOCAL}/arm_*.elf
+	rm -rf ${FW_REPOLOCAL}/arm*.elf
 	rm -rf ${FW_REPOLOCAL}/loader.bin
 	rm -rf ${FW_PATH}/arm_*.elf
 	rm -rf ${FW_PATH}/loader.bin
