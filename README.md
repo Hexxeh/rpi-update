@@ -50,6 +50,13 @@ To upgrade/downgrade to a specific firmware revision, specify its Git hash
 There are a number of options for experts you might like to use.  These are all
 environment variables you must set if you wish to use them.
 
+#### `UPDATE_SELF`
+
+By default, `rpi-update` will attempt to update itself each time it is run.
+You can disable this behavior by:
+
+    UPDATE_SELF=0 sudo rpi-update
+
 #### `SKIP_KERNEL`
 
     SKIP_KERNEL=1 sudo rpi-update
