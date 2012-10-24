@@ -55,18 +55,18 @@ environment variables you must set if you wish to use them.
 By default, `rpi-update` will attempt to update itself each time it is run.
 You can disable this behavior by:
 
-    UPDATE_SELF=0 sudo rpi-update
+    sudo UPDATE_SELF=0 rpi-update
 
 #### `SKIP_KERNEL`
 
-    SKIP_KERNEL=1 sudo rpi-update
+    sudo SKIP_KERNEL=1 rpi-update
 
 Will update everything **except** the `kernel.img` files and the kernel modules.
 Use with caution, some firmware updates might depend on a kernel update.
 
 #### `ROOT_PATH` and `BOOT_PATH`
 
-    ROOT_PATH=/media/root BOOT_PATH=/media/boot sudo rpi-update
+    sudo ROOT_PATH=/media/root BOOT_PATH=/media/boot rpi-update
 
 Allows you to perform an "offline" update, ie update firmware on an SD card you
 are not currently booted from. Useful for installing firmware/kernel to a
