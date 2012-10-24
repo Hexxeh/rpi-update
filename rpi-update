@@ -8,6 +8,12 @@ REPO_URI="http://github.com/Hexxeh/rpi-firmware"
 UPDATE2=${UPDATE2:-1}
 UPDATE_URI="https://github.com/Hexxeh/rpi-update/raw/master/rpi-update"
 
+if [[ ${BOOT_PATH:-"unset"} == "unset" && ${ROOT_PATH:-"unset"} != "unset" ]] ||
+[[ ${BOOT_PATH:-"unset"} != "unset" && ${ROOT_PATH:-"unset"} == "unset" ]]; then
+	echo "You need to specify both ROOT_PATH and BOOT_PATH, or neither"
+	exit 1
+fi
+
 ROOT_PATH=${ROOT_PATH:-"/"}
 BOOT_PATH=${BOOT_PATH:-"/boot"}
 SKIP_KERNEL=${SKIP_KERNEL:-0}
@@ -163,12 +169,6 @@ fi
 if [[ ${UPDATE2} -ne 0 ]]; then
 	echo "Raspberry Pi firmware updater by Hexxeh, enhanced by AndrewS"
 	update_self
-fi
-
-if [[ ( "${ROOT_PATH}" == "/"  &&  "${BOOT_PATH}" != "/boot" ) ]] ||
-[[ ( "${BOOT_PATH}" == "/boot"  &&  "${ROOT_PATH}" != "/" ) ]]; then
-	echo "You need to specify both ROOT_PATH and BOOT_PATH, or neither"
-	exit 1
 fi
 
 if [[ ! -d "${FW_PATH}" ]]; then
