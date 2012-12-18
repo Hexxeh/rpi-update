@@ -94,7 +94,9 @@ function finalise {
 		cp "${FW_PATH}/arm192_start.elf" "${FW_PATH}/start.elf"
 	fi
 	ldconfig -r "${ROOT_PATH}"
-	eval ${GITCMD} rev-parse master > "${FW_PATH}/.firmware_revision"
+	if [[ ${FW_REV} == "" ]]; then
+		eval ${GITCMD} rev-parse master > "${FW_PATH}/.firmware_revision"
+	fi
 	sync
 }
 
