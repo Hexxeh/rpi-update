@@ -19,7 +19,6 @@ FW_PATH="${BOOT_PATH}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
 FW_REV=${1:-""}
 GITCMD="git --git-dir=\"${FW_REPOLOCAL}/.git\" --work-tree=\"${FW_REPOLOCAL}\""
-	test -f /scripts/upd_hist/build_info && UNSUPPORTED = 1
 	[ "$UNSUPPORTED" -eq 1 ] && [ "$RPI_UPDATE_UNSUPPORTED" -eq 0 ] && echo -e "You appear to be trying to update firmware on an incompatible distribution. To force update, run\nRPI_UPDATE_UNSUPPORTED=1 sudo ./rpi-update; exit 1
 function update_self() {
 	echo "Performing self-update"
