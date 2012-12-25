@@ -11,13 +11,15 @@ UPDATE_URI="https://github.com/Hexxeh/rpi-update/raw/master/rpi-update"
 ROOT_PATH=${ROOT_PATH:-"/"}
 BOOT_PATH=${BOOT_PATH:-"/boot"}
 SKIP_KERNEL=${SKIP_KERNEL:-0}
+RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
+UNSUPPORTED=0
 FW_REPO="${REPO_URI}.git"
 FW_REPOLOCAL="${ROOT_PATH}/root/.rpi-firmware"
 FW_PATH="${BOOT_PATH}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
 FW_REV=${1:-""}
 GITCMD="git --git-dir=\"${FW_REPOLOCAL}/.git\" --work-tree=\"${FW_REPOLOCAL}\""
-
+[ "$RPI_UPDATE_UNSUPPORTED" -eq 0 ] && echo -e "You appear to be trying to update firmware on an incompatible distribution. To force update, run\nRPI_UPDATE_UNSUPPORTED=1 sudo ./rpi-update; exit 1
 function update_self() {
 	echo "Performing self-update"
 	_tempFileName="$0.tmp"
