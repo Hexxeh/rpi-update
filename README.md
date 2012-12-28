@@ -26,9 +26,7 @@ sudo rpi-update
 
 To upgrade/downgrade to a specific firmware revision, specify it's Git hash as follows:
 
-<pre>
-rpi-update <git hash>
-</pre>
+    rpi-update <git hash>
 
 If you'd like to set a different GPU/ARM memory split, then define gpu_mem in /boot/config.txt.
 
