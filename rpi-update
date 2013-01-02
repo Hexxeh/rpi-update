@@ -1,11 +1,11 @@
 #!/bin/bash
-
+#ukscone's rpi-update patch version 3
 set -o nounset
 set -o errexit
 
 REPO_URI="http://github.com/Hexxeh/rpi-firmware"
 
-UPDATE2=${UPDATE2:-1}
+UPDATE_SELF=${UPDATE_SELF:-0}
 UPDATE_URI="https://github.com/Hexxeh/rpi-update/raw/master/rpi-update"
 
 if [[ ${BOOT_PATH:-"unset"} == "unset" && ${ROOT_PATH:-"unset"} != "unset" ]] ||
@@ -14,6 +14,7 @@ if [[ ${BOOT_PATH:-"unset"} == "unset" && ${ROOT_PATH:-"unset"} != "unset" ]] ||
 	exit 1
 fi
 
+VERBOSE=${VERBOSE:-0}
 ROOT_PATH=${ROOT_PATH:-"/"}
 BOOT_PATH=${BOOT_PATH:-"/boot"}
 SKIP_KERNEL=${SKIP_KERNEL:-0}
@@ -27,10 +28,10 @@ GITCMD="git --git-dir=\"${FW_REPOLOCAL}/.git\" --work-tree=\"${FW_REPOLOCAL}\""
 [ "${RPI_UPDATE_UNSUPPORTED}" -ne 0 ] && echo -e "You appear to be trying to update firmware on an incompatible distribution. To force update, run the following:\nsudo -E RPI_UPDATE_UNSUPPORTED=0 ./rpi-update" && exit 1
 
 function update_self() {
-	echo "Performing self-update"
+echo "Performing self-update"
 	_tempFileName="$0.tmp"
 
-	if ! wget --quiet --output-document="${_tempFileName}" "${UPDATE_URI}"; then
+	if ! wget  `[ $VERBOSE -ge 1 ] && echo "--verbose" || echo "--quiet"` --output-document="${_tempFileName}" "${UPDATE_URI}"; then
 		echo "Failed to download update for rpi-update!"
 		echo "Make sure you have ca-certificates installed and that the time is set correctly"
 		exit 1
@@ -45,8 +46,8 @@ function update_self() {
 	cat > /tmp/updateScript.sh << EOF
 	#!/bin/bash
 	if mv "${_tempFileName}" "$0"; then
-		rm -- "\$0"
-		exec env UPDATE2=0 /bin/bash "$0" "${FW_REV}"
+		rm `[ $VERBOSE -ge 3 ] && echo "--verbose" || echo ""` -- "\$0"
+		exec env UPDATE_SELF=0 /bin/bash "$0" "${FW_REV}"
 	else
 		echo "Failed!"
 	fi
@@ -57,7 +58,7 @@ EOF
 
 function update_modules {
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
-		cp -R "${FW_REPOLOCAL}/modules/"* "${FW_MODPATH}/"
+		cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` -R "${FW_REPOLOCAL}/modules/"* "${FW_MODPATH}/"
 		find "${FW_REPOLOCAL}/modules" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
 			depmod -b "${ROOT_PATH}" -a $(basename "${DIR}")
 		done
@@ -72,12 +73,12 @@ function update_sdk {
 	ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/bash")
 	if [ "${ELFOUTPUT}" != "${ELFOUTPUT/VFP_args/}" ]; then
 		echo "Using HardFP libraries"
-		cp -R "${FW_REPOLOCAL}/vc/hardfp/"* "${ROOT_PATH}/"
+		cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` -R "${FW_REPOLOCAL}/vc/hardfp/"* "${ROOT_PATH}/"
 	else
 		echo "Using SoftFP libraries"
-		cp -R "${FW_REPOLOCAL}/vc/softfp/"* "${ROOT_PATH}/"
+		cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` -R "${FW_REPOLOCAL}/vc/softfp/"* "${ROOT_PATH}/"
 	fi
-	cp -R "${FW_REPOLOCAL}/vc/sdk/"* "${ROOT_PATH}/"
+	cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` -R "${FW_REPOLOCAL}/vc/sdk/"* "${ROOT_PATH}/"
 
 	if [[ -f /etc/init.d/vcfiled ]]; then
 		/etc/init.d/vcfiled start
@@ -85,13 +86,13 @@ function update_sdk {
 }
 
 function update_firmware {
-	rm -rf ${FW_PATH}/*.elf
-	rm -rf ${FW_PATH}/*.bin
-	cp ${FW_REPOLOCAL}/*.elf "${FW_PATH}/"
-	cp ${FW_REPOLOCAL}/*.bin "${FW_PATH}/"
-	cp ${FW_REPOLOCAL}/*.dat "${FW_PATH}/"
+	rm `[ $VERBOSE -ge 3 ] && echo "--verbose" || echo ""` -rf ${FW_PATH}/*.elf
+	rm `[ $VERBOSE -ge 3 ] && echo "--verbose" || echo ""` -rf ${FW_PATH}/*.bin
+	cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` ${FW_REPOLOCAL}/*.elf "${FW_PATH}/"
+	cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` ${FW_REPOLOCAL}/*.bin "${FW_PATH}/"
+	cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` ${FW_REPOLOCAL}/*.dat "${FW_PATH}/"
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
-		cp "${FW_REPOLOCAL}/"*.img "${FW_PATH}/"
+		cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` "${FW_REPOLOCAL}/"*.img "${FW_PATH}/"
 	else
 		echo "Skipping kernel/modules updated as requested"
 	fi
@@ -99,11 +100,13 @@ function update_firmware {
 
 function finalise {
 	if [[ -f "${FW_PATH}/arm192_start.elf" ]]; then
-		cp "${FW_PATH}/arm192_start.elf" "${FW_PATH}/start.elf"
+		cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` "${FW_PATH}/arm192_start.elf" "${FW_PATH}/start.elf"
 	fi
 	ldconfig -r "${ROOT_PATH}"
 	if [[ ${FW_REV} == "" ]]; then
 		eval ${GITCMD} rev-parse master > "${FW_PATH}/.firmware_revision"
+	else
+	        echo "${FW_REV}" > "${FW_PATH}/.firmware_revision"
 	fi
 	sync
 }
@@ -111,7 +114,7 @@ function finalise {
 function download_repo {
 	echo "Setting up firmware (this will take a few minutes)"
 	mkdir -p "${FW_REPOLOCAL}"
-	git clone "${FW_REPO}" "${FW_REPOLOCAL}" --depth=1 --quiet
+	git clone "${FW_REPO}" "${FW_REPOLOCAL}" --depth=1 `[ $VERBOSE -ge 1 ] && echo "--verbose" || echo "--quiet"` 
 	RETVAL=$?
 	if [[ ${RETVAL} -ne 0 ]]; then
 		echo "Failed to download new firmware files"
@@ -121,15 +124,16 @@ function download_repo {
 
 function update_repo {
 	echo "Updating firmware (this will take a few minutes)"
-	eval ${GITCMD} fetch --quiet
+	eval ${GITCMD} fetch `[ $VERBOSE -ge 1 ] && echo "--verbose" || echo "--quiet"`
 	RETVAL=$?
 	if [[ ${RETVAL} -ne 0 ]]; then
 		echo "Failed to download updated firmware files"
 		exit 1
 	fi
-	eval ${GITCMD} reset --hard --quiet
-	eval ${GITCMD} clean -f -d --quiet
-	eval ${GITCMD} merge origin/master -m "automerge" --quiet
+	eval ${GITCMD} reset --hard `[ $VERBOSE -ge 1 ] && echo "" || echo "--quiet"`
+	eval ${GITCMD} clean -f -d  `[ $VERBOSE -ge 1 ] && echo "" || echo "--quiet"`
+	eval ${GITCMD} merge origin/master -m "automerge" `[ $VERBOSE -ge 1 ] && echo "--verbose" || echo "--quiet"`
+
 	RETVAL=$?
 	if [[ ${RETVAL} -ne 0 ]]; then
 		echo "Failed to download updated firmware files"
@@ -138,8 +142,8 @@ function update_repo {
 }
 
 function do_backup {
-	cp -a "${FW_PATH}" "${FW_PATH}.bak"
-	cp -a "${FW_MODPATH}" "${FW_MODPATH}.bak"
+	cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` -a "${FW_PATH}" "${FW_PATH}.bak"
+	cp `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` -a "${FW_MODPATH}" "${FW_MODPATH}.bak"
 }
 
 function do_update {
@@ -156,9 +160,9 @@ function do_update {
 function download_rev {
 	echo "Downloading specific firmware revision (this will take a few minutes)"
 	mkdir -p "${FW_REPOLOCAL}"
-	wget -q "${REPO_URI}/tarball/${FW_REV}" -O "${FW_REPOLOCAL}/${FW_REV}.tar.gz"
-	tar xzf "${FW_REPOLOCAL}/${FW_REV}.tar.gz" -C "${FW_REPOLOCAL}" --strip-components=1
-	rm "${FW_REPOLOCAL}/${FW_REV}.tar.gz"
+	wget  `[ $VERBOSE -ge 1 ] && echo "--verbose" || echo "--quiet"` "${REPO_URI}/tarball/${FW_REV}" -O "${FW_REPOLOCAL}/${FW_REV}.tar.gz"
+	tar `[ $VERBOSE -ge 2 ] && echo "--verbose" || echo ""` xzf "${FW_REPOLOCAL}/${FW_REV}.tar.gz" -C "${FW_REPOLOCAL}" --strip-components=1 
+	rm `[ $VERBOSE -ge 3 ] && echo "--verbose" || echo ""` "${FW_REPOLOCAL}/${FW_REV}.tar.gz"
 }
 
 if [[ ${EUID} -ne 0 ]]; then
@@ -166,7 +170,7 @@ if [[ ${EUID} -ne 0 ]]; then
 	exit 1
 fi
 
-if [[ ${UPDATE2} -ne 0 ]]; then
+if [[ ${UPDATE_SELF} -ne 0 ]]; then
 	echo "Raspberry Pi firmware updater by Hexxeh, enhanced by AndrewS"
 	update_self
 fi
