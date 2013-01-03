@@ -1,56 +1,74 @@
-rpi-update
-==========
+# rpi-update
 
-An easier way to update the firmware of your Raspberry Pi
+An easier way to update the firmware of your Raspberry Pi.
 
-Instructions
-------------
+## Preparations
+
+There are two possible problems related to SSL certificates that may prevent
+this tool from working.
+
+-   The time may be set incorrectly on your Raspberry Pi, which you can fix
+    by setting the time using NTP.
+
+        sudo ntpdate -u ntp.ubuntu.com
+
+-   The other possible issue is that you might not have the `ca-certificates`
+    package installed, and so GitHub's SSL certificate isn't trusted. If you are
+    on Debian, you can resolve this by typing:
+
+        sudo apt-get install ca-certificates
+
+## Installing
 
 To install the tool, run the following command:
 
-<pre>
-sudo wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update && sudo chmod +x /usr/bin/rpi-update
-</pre>
+    sudo wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update && chmod +x /usr/bin/rpi-update
 
-If you get errors relating to certificates, then the problem is likely due to one of two things. Either the time is set incorrectly on your Raspberry Pi, which you can fix by simply setting the time using NTP. The other possible issue is that you might not have the ca-certificates package installed, and so GitHub's SSL certificate isn't trusted. If you're on Debian, you can resolve this by typing:
+## Updating
 
-<pre>
-sudo apt-get install ca-certificates
-</pre>
+Then, to update your firmware, just run the following command:
 
-To then update your firmware, simply run the following command:
+    sudo rpi-update
 
-<pre>
-sudo rpi-update
-</pre>
+## Activating
 
-To upgrade/downgrade to a specific firmware revision, specify it's Git hash as follows:
+After the firmware has been sucessfully updated, you'll need to reboot to load
+the new firmware.
 
-    rpi-update <git hash>
+## Options
 
-If you'd like to set a different GPU/ARM memory split, then define gpu_mem in /boot/config.txt.
+If you'd like to set a different GPU/ARM memory split, then define `gpu_mem` in
+`/boot/config.txt`.
 
-Expert options
---------------
+To upgrade/downgrade to a specific firmware revision, specify its Git hash
+(from the https://github.com/Hexxeh/rpi-firmware repository) as follows:
 
-There are a number of options for experts you might like to use, these are all environment variables you must set if you wish to use them.
+    sudo rpi-update fab7796df0cf29f9563b507a59ce5b17d93e0390
 
-### SKIP_KERNEL
+### Expert options
 
-#### Usage
+There are a number of options for experts you might like to use.  These are all
+environment variables you must set if you wish to use them.
 
-SKIP_KERNEL=1 rpi-update
+#### `UPDATE_SELF`
 
-#### Effect
+By default, `rpi-update` will attempt to update itself each time it is run.
+You can disable this behavior by:
 
-Will update everything EXCEPT the kernel.img files and the kernel modules. Use with caution, some firmware updates might depend a kernel update.
+    sudo UPDATE_SELF=0 rpi-update
 
-### ROOT_PATH/BOOT_PATH
+#### `SKIP_KERNEL`
 
-#### Usage
+    sudo SKIP_KERNEL=1 rpi-update
 
-ROOT_PATH=/media/root BOOT_PATH=/media/boot rpi-update
+Will update everything **except** the `kernel.img` files and the kernel modules.
+Use with caution, some firmware updates might depend on a kernel update.
 
-#### Effect
+#### `ROOT_PATH` and `BOOT_PATH`
 
-Allows you to perform an "offline" update, ie update firmware on an SD card you're not currently booted from. Useful for installing firmware/kernel to a non-RPI customised image. Be careful, you must specify both options or neither. Specifying only one will not work.
+    sudo ROOT_PATH=/media/root BOOT_PATH=/media/boot rpi-update
+
+Allows you to perform an "offline" update, ie update firmware on an SD card you
+are not currently booted from. Useful for installing firmware/kernel to a
+non-RPI customised image. Be careful, you must specify both options or neither.
+Specifying only one will not work.
