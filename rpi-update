@@ -133,7 +133,7 @@ function download_repo {
 
 function update_repo {
 	echo " *** Updating firmware (this may take a few minutes)"
-	eval ${GITCMD} fetch
+	eval ${GITCMD} fetch --depth=1
 	RETVAL=$?
 	if [[ ${RETVAL} -ne 0 ]]; then
 		echo " !!! Failed to download updated firmware files"
