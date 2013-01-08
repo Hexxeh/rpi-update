@@ -72,10 +72,6 @@ function update_modules {
 function update_sdk {
 	echo " *** Updating SDK"
 
-	if [[ -f /etc/init.d/vcfiled ]]; then
-		/etc/init.d/vcfiled stop
-	fi
-
 	ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/bash")
 	if [ "${ELFOUTPUT}" != "${ELFOUTPUT/VFP_args/}" ]; then
 		echo " *** Using HardFP libraries"
@@ -85,10 +81,6 @@ function update_sdk {
 		cp -vR "${FW_REPOLOCAL}/vc/softfp/"* "${ROOT_PATH}/"
 	fi
 	cp -vR "${FW_REPOLOCAL}/vc/sdk/"* "${ROOT_PATH}/"
-
-	if [[ -f /etc/init.d/vcfiled ]]; then
-		/etc/init.d/vcfiled start
-	fi
 }
 
 function update_firmware {
