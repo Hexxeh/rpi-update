@@ -123,8 +123,10 @@ function finalise {
 function download_repo {
 	echo " *** Setting up firmware (this may take a few minutes)"
 	mkdir -p "${FW_REPOLOCAL}"
+	set +e
 	git clone "${FW_REPO}" "${FW_REPOLOCAL}" --depth=1
 	RETVAL=$?
+	set -e
 	if [[ ${RETVAL} -ne 0 ]]; then
 		echo " !!! Failed to download new firmware files"
 		exit 1
@@ -133,26 +135,34 @@ function download_repo {
 
 function update_repo {
 	echo " *** Updating firmware (this may take a few minutes)"
+	set +e
 	eval ${GITCMD} fetch --depth=1
 	RETVAL=$?
+	set -e
 	if [[ ${RETVAL} -ne 0 ]]; then
-		echo " !!! Failed to download updated firmware files"
-		exit 1
+		echo " !!! Failed to fetch updated firmware files, trying a fresh checkout"
+		rm -rf ${FW_REPOLOCAL}
+		download_repo
+		return
 	fi
-	eval ${GITCMD} reset --hard
-	eval ${GITCMD} clean -f -d
-	eval ${GITCMD} merge origin/master -m "automerge"
+	set +e
+	eval ${GITCMD} reset --hard && eval ${GITCMD} clean -f -d && eval ${GITCMD} merge origin/master -m "automerge"
 	RETVAL=$?
+	set -e
 	if [[ ${RETVAL} -ne 0 ]]; then
-		echo " !!! Failed to download updated firmware files"
-		exit 1
+		echo " !!! Failed to merge updated firmware files, trying a fresh checkout"
+		rm -rf ${FW_REPOLOCAL}
+		download_repo
+		return
 	fi
 }
 
 function do_backup {
 	echo " *** Backing up files"
+	rm -rf "${FW_PATH}.bak"
 	cp -va "${FW_PATH}" "${FW_PATH}.bak"
-	cp -va "${FW_MODPATH}" "${FW_MODPATH}.bak"
+	rm -rf "${FW_MODPATH}.bak"
+	cp -va "${FW_MODPATH}" ""
 }
 
 function do_update {
@@ -187,10 +197,6 @@ fi
 
 if [[ ! -d "${FW_PATH}" ]]; then
 	echo " !!! ${FW_PATH} doesn't exist"
-	exit 1
-fi
-if [[ ! -f "${FW_PATH}/start.elf" ]]; then
-	echo " !!! ${FW_PATH}/start.elf doesn't exist."
 	exit 1
 fi
 if [[ ! -d "${FW_MODPATH}" ]]; then
