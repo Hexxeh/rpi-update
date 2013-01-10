@@ -154,7 +154,7 @@ function do_backup {
 	rm -rf "${FW_PATH}.bak"
 	cp -va "${FW_PATH}" "${FW_PATH}.bak"
 	rm -rf "${FW_MODPATH}.bak"
-	cp -va "${FW_MODPATH}" ""
+	cp -va "${FW_MODPATH}" "${FW_MODPATH}.bak"
 }
 
 function do_update {
