@@ -126,27 +126,9 @@ function download_repo {
 }
 
 function update_repo {
-	echo " *** Updating firmware (this may take a few minutes)"
-	set +e
-	eval ${GITCMD} fetch --depth=1
-	RETVAL=$?
-	set -e
-	if [[ ${RETVAL} -ne 0 ]]; then
-		echo " !!! Failed to fetch updated firmware files, trying a fresh checkout"
-		rm -rf ${FW_REPOLOCAL}
-		download_repo
-		return
-	fi
-	set +e
-	eval ${GITCMD} reset --hard && eval ${GITCMD} clean -f -d && eval ${GITCMD} merge origin/master -m "automerge"
-	RETVAL=$?
-	set -e
-	if [[ ${RETVAL} -ne 0 ]]; then
-		echo " !!! Failed to merge updated firmware files, trying a fresh checkout"
-		rm -rf ${FW_REPOLOCAL}
-		download_repo
-		return
-	fi
+	# updating a depth=1 git tree doesn't work, so just kill it and clone a new one
+	rm -rf ${FW_REPOLOCAL}
+	download_repo
 }
 
 function do_backup {
