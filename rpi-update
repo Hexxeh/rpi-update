@@ -42,7 +42,7 @@ function update_self() {
 		exit 1
 	fi
 
-	cat > /tmp/updateScript.sh << EOF
+	cat > /root/.updateScript.sh << EOF
 	#!/bin/bash
 	if mv "${_tempFileName}" "$0"; then
 		rm -- "\$0"
@@ -53,7 +53,7 @@ function update_self() {
 EOF
 
 	echo " *** Relaunching after update"
-	exec /bin/bash /tmp/updateScript.sh
+	exec /bin/bash /root/.updateScript.sh
 }
 
 function update_modules {
