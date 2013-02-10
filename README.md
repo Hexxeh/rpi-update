@@ -10,6 +10,7 @@ this tool from working.
 -   The time may be set incorrectly on your Raspberry Pi, which you can fix
     by setting the time using NTP.
 
+        sudo apt-get install ntpdate
         sudo ntpdate -u ntp.ubuntu.com
 
 -   The other possible issue is that you might not have the `ca-certificates`
