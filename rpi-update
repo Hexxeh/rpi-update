@@ -197,11 +197,14 @@ if [[ ${FW_REV} != "" ]]; then
 	download_rev
 	do_update "updated to revision ${FW_REV}"
 elif [[ -f "${FW_REPOLOCAL}/.git/config" ]]; then
-	update_repo
-	if [[ -f "${FW_PATH}/.firmware_revision" ]] && [[ $(cat "${FW_PATH}/.firmware_revision") == $(eval ${GITCMD} rev-parse master) ]]; then
+	# ask git server version before spending time cloning
+	GITREV=$(git ls-remote -h ${REPO_URI} refs/heads/master | awk '{print $1}')
+	if [[ -f "${FW_PATH}/.firmware_revision" ]] && [[ $(cat "${FW_PATH}/.firmware_revision") == "$GITREV" ]]; then
 		echo " *** Your firmware is already up to date"
-		finalise
+		# no changes made, nothing to finalise
+		# finalise
 	else
+		update_repo
 		do_update "updated"
 	fi
 else
