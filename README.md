@@ -4,20 +4,9 @@ An easier way to update the firmware of your Raspberry Pi.
 
 ## Preparations
 
-There are two possible problems related to SSL certificates that may prevent
-this tool from working.
+You need git installed to use this too. To install run:
 
--   The time may be set incorrectly on your Raspberry Pi, which you can fix
-    by setting the time using NTP.
-
-        sudo apt-get install ntpdate
-        sudo ntpdate -u ntp.ubuntu.com
-
--   The other possible issue is that you might not have the `ca-certificates`
-    package installed, and so GitHub's SSL certificate isn't trusted. If you are
-    on Debian, you can resolve this by typing:
-
-        sudo apt-get install ca-certificates
+        sudo apt-get install git-core
 
 ## Installing
 
@@ -73,3 +62,20 @@ Allows you to perform an "offline" update, ie update firmware on an SD card you
 are not currently booted from. Useful for installing firmware/kernel to a
 non-RPI customised image. Be careful, you must specify both options or neither.
 Specifying only one will not work.
+
+#### Troubleshooting
+
+There are two possible problems related to SSL certificates that may prevent
+this tool from working.
+
+-   The time may be set incorrectly on your Raspberry Pi, which you can fix
+    by setting the time using NTP.
+
+        sudo apt-get install ntpdate
+        sudo ntpdate -u ntp.ubuntu.com
+
+-   The other possible issue is that you might not have the `ca-certificates`
+    package installed, and so GitHub's SSL certificate isn't trusted. If you are
+    on Debian, you can resolve this by typing:
+
+        sudo apt-get install ca-certificates
