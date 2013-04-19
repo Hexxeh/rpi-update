@@ -14,6 +14,7 @@ if [[ ${BOOT_PATH:-"unset"} == "unset" && ${ROOT_PATH:-"unset"} != "unset" ]] ||
 	exit 1
 fi
 
+BRANCH=${BRANCH:-"master"}
 ROOT_PATH=${ROOT_PATH:-"/"}
 BOOT_PATH=${BOOT_PATH:-"/boot"}
 SKIP_KERNEL=${SKIP_KERNEL:-0}
@@ -106,7 +107,7 @@ function finalise {
 	ldconfig -r "${ROOT_PATH}"
 	if [[ ${FW_REV} == "" ]]; then
 		echo " *** Storing current firmware revision"
-		eval ${GITCMD} rev-parse master > "${FW_PATH}/.firmware_revision"
+		eval ${GITCMD} rev-parse ${BRANCH} > "${FW_PATH}/.firmware_revision"
   else
     echo ${FW_REV} > "${FW_PATH}/.firmware_revision"
   fi
@@ -118,7 +119,7 @@ function download_repo {
 	echo " *** Setting up firmware (this may take a few minutes)"
 	mkdir -p "${FW_REPOLOCAL}"
 	set +e
-	git clone "${FW_REPO}" "${FW_REPOLOCAL}" --depth=1
+	git clone "${FW_REPO}" "${FW_REPOLOCAL}" --depth=1 --branch ${BRANCH}
 	RETVAL=$?
 	set -e
 	if [[ ${RETVAL} -ne 0 ]]; then
