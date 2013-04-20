@@ -63,6 +63,15 @@ are not currently booted from. Useful for installing firmware/kernel to a
 non-RPI customised image. Be careful, you must specify both options or neither.
 Specifying only one will not work.
 
+#### `BRANCH`
+
+By default, clones the firmware files from the master branch, else uses the files
+from the specified branch, eg:
+
+    sudo BRANCH=next rpi-update
+
+will use the 'next' branch.
+
 #### Troubleshooting
 
 There are two possible problems related to SSL certificates that may prevent
