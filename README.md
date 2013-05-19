@@ -2,17 +2,25 @@
 
 An easier way to update the firmware of your Raspberry Pi.
 
-## Preparations
-
-You need git installed to use this too. To install run:
-
-        sudo apt-get install git-core
-
-## Installing
+## Installing under Raspbian
 
 To install the tool, run the following command:
 
-    sudo wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update && sudo chmod +x /usr/bin/rpi-update
+    sudo apt-get install rpi-update
+
+## Installing on other OS
+
+### Preparations
+
+You need git installed to use this too. To install run:
+
+    sudo apt-get install git-core
+
+### Installing
+
+To install the tool, run the following command:
+
+    sudo wget https://raw.github.com/Hexxeh/rpi-update/master/rpi-update -O /usr/bin/rpi-update && sudo chmod +x /usr/bin/rpi-update
 
 ## Updating
 
