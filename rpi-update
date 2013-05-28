@@ -176,7 +176,8 @@ if [[ ! -d "${FW_PATH}" ]]; then
 	echo " !!! ${FW_PATH} doesn't exist"
 	exit 1
 fi
-if [[ ! -d "${FW_MODPATH}" ]]; then
+
+if [[ ${SKIP_KERNEL} -eq 0 ]] && [[ ! -d "${FW_MODPATH}" ]]; then
 	echo " !!! ${FW_MODPATH} doesn't exist"
 	exit 1
 fi
