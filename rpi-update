@@ -108,9 +108,9 @@ function finalise {
 	if [[ ${FW_REV} == "" ]]; then
 		echo " *** Storing current firmware revision"
 		eval ${GITCMD} rev-parse ${BRANCH} > "${FW_PATH}/.firmware_revision"
-  else
-    echo ${FW_REV} > "${FW_PATH}/.firmware_revision"
-  fi
+	else
+		echo ${FW_REV} > "${FW_PATH}/.firmware_revision"
+	fi
 	echo " *** Syncing changes to disk"
 	sync
 }
