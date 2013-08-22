@@ -44,7 +44,6 @@ function update_self() {
 	fi
 
 	cat > /root/.updateScript.sh << EOF
-	#!/bin/bash
 	if mv "${_tempFileName}" "$0"; then
 		rm -- "\$0"
 		exec env UPDATE_SELF=0 /bin/bash "$0" "${FW_REV}"
