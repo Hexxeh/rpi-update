@@ -25,7 +25,6 @@ FW_PATH="${BOOT_PATH}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
 FW_REV=${1:-""}
 FW_REVFILE="${FW_PATH}/.firmware_revision"
-GITCMD="git --git-dir=\"${FW_REPOLOCAL}/.git\" --work-tree=\"${FW_REPOLOCAL}\""
 [ "${RPI_UPDATE_UNSUPPORTED}" -ne 0 ] && echo -e "You appear to be trying to update firmware on an incompatible distribution. To force update, run the following:\nsudo -E RPI_UPDATE_UNSUPPORTED=0 ./rpi-update" && exit 1
 
 function update_self() {
@@ -107,7 +106,7 @@ function finalise {
 	ldconfig -r "${ROOT_PATH}"
 	if [[ ${FW_REV} == "" ]]; then
 		echo " *** Storing current firmware revision"
-		eval ${GITCMD} rev-parse ${BRANCH} > "${FW_REVFILE}"
+		git --git-dir="${FW_REPOLOCAL}/.git" --work-tree="${FW_REPOLOCAL}" rev-parse ${BRANCH} > "${FW_REVFILE}"
 	else
 		echo ${FW_REV} > "${FW_REVFILE}"
 	fi
