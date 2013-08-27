@@ -159,9 +159,10 @@ function do_update {
 function download_rev {
 	echo " *** Downloading specific firmware revision (this will take a few minutes)"
 	mkdir -p "${FW_REPOLOCAL}"
-	wget "${REPO_URI}/tarball/${FW_REV}" -O "${FW_REPOLOCAL}/${FW_REV}.tar.gz"
-	tar xzf "${FW_REPOLOCAL}/${FW_REV}.tar.gz" -C "${FW_REPOLOCAL}" --strip-components=1
-	rm "${FW_REPOLOCAL}/${FW_REV}.tar.gz"
+	FW_TARBALL="${FW_REPOLOCAL}/${FW_REV}.tar.gz"
+	wget "${REPO_URI}/tarball/${FW_REV}" -O "${FW_TARBALL}"
+	tar xzf "${FW_TARBALL}" -C "${FW_REPOLOCAL}" --strip-components=1
+	rm "${FW_TARBALL}"
 }
 
 if [[ ${EUID} -ne 0 ]]; then
