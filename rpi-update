@@ -24,6 +24,7 @@ FW_REPOLOCAL="${ROOT_PATH}/root/.rpi-firmware"
 FW_PATH="${BOOT_PATH}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
 FW_REV=${1:-""}
+FW_REVFILE="${FW_PATH}/.firmware_revision"
 GITCMD="git --git-dir=\"${FW_REPOLOCAL}/.git\" --work-tree=\"${FW_REPOLOCAL}\""
 [ "${RPI_UPDATE_UNSUPPORTED}" -ne 0 ] && echo -e "You appear to be trying to update firmware on an incompatible distribution. To force update, run the following:\nsudo -E RPI_UPDATE_UNSUPPORTED=0 ./rpi-update" && exit 1
 
@@ -106,9 +107,9 @@ function finalise {
 	ldconfig -r "${ROOT_PATH}"
 	if [[ ${FW_REV} == "" ]]; then
 		echo " *** Storing current firmware revision"
-		eval ${GITCMD} rev-parse ${BRANCH} > "${FW_PATH}/.firmware_revision"
+		eval ${GITCMD} rev-parse ${BRANCH} > "${FW_REVFILE}"
 	else
-		echo ${FW_REV} > "${FW_PATH}/.firmware_revision"
+		echo ${FW_REV} > "${FW_REVFILE}"
 	fi
 	echo " *** Syncing changes to disk"
 	sync
@@ -157,9 +158,10 @@ function do_update {
 function download_rev {
 	echo " *** Downloading specific firmware revision (this will take a few minutes)"
 	mkdir -p "${FW_REPOLOCAL}"
-	wget "${REPO_URI}/tarball/${FW_REV}" -O "${FW_REPOLOCAL}/${FW_REV}.tar.gz"
-	tar xzf "${FW_REPOLOCAL}/${FW_REV}.tar.gz" -C "${FW_REPOLOCAL}" --strip-components=1
-	rm "${FW_REPOLOCAL}/${FW_REV}.tar.gz"
+	FW_TARBALL="${FW_REPOLOCAL}/${FW_REV}.tar.gz"
+	wget "${REPO_URI}/tarball/${FW_REV}" -O "${FW_TARBALL}"
+	tar xzf "${FW_TARBALL}" -C "${FW_REPOLOCAL}" --strip-components=1
+	rm "${FW_TARBALL}"
 }
 
 if [[ ${EUID} -ne 0 ]]; then
@@ -204,7 +206,7 @@ if [[ ${FW_REV} != "" ]]; then
 elif [[ -f "${FW_REPOLOCAL}/.git/config" ]]; then
 	# ask git server version before spending time cloning
 	GITREV=$(git ls-remote -h ${REPO_URI} refs/heads/${BRANCH} | awk '{print $1}')
-	if [[ -f "${FW_PATH}/.firmware_revision" ]] && [[ $(cat "${FW_PATH}/.firmware_revision") == "$GITREV" ]]; then
+	if [[ -f "${FW_REVFILE}" ]] && [[ $(cat "${FW_REVFILE}") == "$GITREV" ]]; then
 		echo " *** Your firmware is already up to date"
 		# no changes made, nothing to finalise
 		# finalise
