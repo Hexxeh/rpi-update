@@ -203,7 +203,7 @@ echo " *** ARM/GPU split is now defined in /boot/config.txt using the gpu_mem op
 if [[ ${FW_REV} != "" ]]; then
 	download_rev
 	do_update "updated to revision ${FW_REV}"
-elif [[ -f "${FW_REPOLOCAL}/.git/config" ]]; then
+elif [[ -f "${FW_REPOLOCAL}/bootcode.bin" ]]; then
 	# ask git server version before spending time cloning
 	GITREV=$(git ls-remote -h ${REPO_URI} refs/heads/${BRANCH} | awk '{print $1}')
 	if [[ -f "${FW_REVFILE}" ]] && [[ $(cat "${FW_REVFILE}") == "$GITREV" ]]; then
@@ -216,6 +216,10 @@ elif [[ -f "${FW_REPOLOCAL}/.git/config" ]]; then
 	fi
 else
 	echo " *** We're running for the first time"
+	if [[ -d "${FW_REPOLOCAL}" ]]; then
+		# rpi-update must have errored during the first run
+		rm -rf "${FW_REPOLOCAL}"
+	fi
 	download_repo
 	do_backup
 	do_update "setup"
