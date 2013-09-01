@@ -25,7 +25,7 @@ FW_PATH="${BOOT_PATH}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
 FW_REV=${1:-""}
 FW_REVFILE="${FW_PATH}/.firmware_revision"
-[ "${RPI_UPDATE_UNSUPPORTED}" -ne 0 ] && echo -e "You appear to be trying to update firmware on an incompatible distribution. To force update, run the following:\nsudo -E RPI_UPDATE_UNSUPPORTED=0 ./rpi-update" && exit 1
+[ "${RPI_UPDATE_UNSUPPORTED}" -ne 0 ] && echo -e "You appear to be trying to update firmware on an incompatible distribution. To force update, run the following:\nsudo -E RPI_UPDATE_UNSUPPORTED=0 rpi-update" && exit 1
 
 function update_self() {
 	echo " *** Performing self-update"
@@ -61,8 +61,9 @@ function update_modules {
 		echo " *** Updating kernel modules"
 		cp -vR "${FW_REPOLOCAL}/modules/"* "${FW_MODPATH}/"
 		find "${FW_REPOLOCAL}/modules" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
-			echo " *** depmod $(basename "${DIR}")"
-			depmod -b "${ROOT_PATH}" -a $(basename "${DIR}")
+			BASEDIR=$(basename "${DIR}")
+			echo " *** depmod ${BASEDIR}"
+			depmod -b "${ROOT_PATH}" -a "${BASEDIR}"
 		done
 	else
 		echo " *** As requested, not updating kernel modules"
@@ -85,11 +86,11 @@ function update_sdk {
 
 function update_firmware {
 	echo " *** Updating firmware"
-	rm -rf ${FW_PATH}/*.elf
-	rm -rf ${FW_PATH}/*.bin
-	cp -v ${FW_REPOLOCAL}/*.elf "${FW_PATH}/"
-	cp -v ${FW_REPOLOCAL}/*.bin "${FW_PATH}/"
-	cp -v ${FW_REPOLOCAL}/*.dat "${FW_PATH}/"
+	rm -rf "${FW_PATH}/"*.elf
+	rm -rf "${FW_PATH}/"*.bin
+	cp -v "${FW_REPOLOCAL}/"*.elf "${FW_PATH}/"
+	cp -v "${FW_REPOLOCAL}/"*.bin "${FW_PATH}/"
+	cp -v "${FW_REPOLOCAL}/"*.dat "${FW_PATH}/"
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
 		cp -v "${FW_REPOLOCAL}/"*.img "${FW_PATH}/"
 	else
@@ -104,11 +105,11 @@ function finalise {
 	fi
 	echo " *** Running ldconfig"
 	ldconfig -r "${ROOT_PATH}"
-	if [[ ${FW_REV} == "" ]]; then
+	if [[ "${FW_REV}" == "" ]]; then
 		echo " *** Storing current firmware revision"
-		git --git-dir="${FW_REPOLOCAL}/.git" rev-parse ${BRANCH} > "${FW_REVFILE}"
+		git --git-dir="${FW_REPOLOCAL}/.git" rev-parse "${BRANCH}" > "${FW_REVFILE}"
 	else
-		echo ${FW_REV} > "${FW_REVFILE}"
+		echo "${FW_REV}" > "${FW_REVFILE}"
 	fi
 	echo " *** Syncing changes to disk"
 	sync
@@ -118,7 +119,7 @@ function download_repo {
 	echo " *** Setting up firmware (this may take a few minutes)"
 	mkdir -p "${FW_REPOLOCAL}"
 	set +e
-	git clone "${FW_REPO}" "${FW_REPOLOCAL}" --depth=1 --branch ${BRANCH}
+	git clone "${FW_REPO}" "${FW_REPOLOCAL}" --depth=1 --branch "${BRANCH}"
 	RETVAL=$?
 	set -e
 	if [[ ${RETVAL} -ne 0 ]]; then
@@ -129,7 +130,7 @@ function download_repo {
 
 function update_repo {
 	# updating a depth=1 git tree doesn't work, so just kill it and clone a new one
-	rm -rf ${FW_REPOLOCAL}
+	rm -rf "${FW_REPOLOCAL}"
 	download_repo
 }
 
@@ -200,12 +201,12 @@ command -v readelf >/dev/null 2>&1 || {
 }
 
 echo " *** ARM/GPU split is now defined in /boot/config.txt using the gpu_mem option!"
-if [[ ${FW_REV} != "" ]]; then
+if [[ "${FW_REV}" != "" ]]; then
 	download_rev
 	do_update "updated to revision ${FW_REV}"
 elif [[ -f "${FW_REPOLOCAL}/bootcode.bin" ]]; then
 	# ask git server version before spending time cloning
-	GITREV=$(git ls-remote -h ${REPO_URI} refs/heads/${BRANCH} | awk '{print $1}')
+	GITREV=$(git ls-remote -h "${REPO_URI}" "refs/heads/${BRANCH}" | awk '{print $1}')
 	if [[ -f "${FW_REVFILE}" ]] && [[ $(cat "${FW_REVFILE}") == "$GITREV" ]]; then
 		echo " *** Your firmware is already up to date"
 		# no changes made, nothing to finalise
