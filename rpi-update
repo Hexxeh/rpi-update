@@ -58,14 +58,14 @@ EOF
 
 function update_modules {
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
-		echo " *** Updating modules"
+		echo " *** Updating kernel modules"
 		cp -vR "${FW_REPOLOCAL}/modules/"* "${FW_MODPATH}/"
 		find "${FW_REPOLOCAL}/modules" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
 			echo " *** depmod $(basename "${DIR}")"
 			depmod -b "${ROOT_PATH}" -a $(basename "${DIR}")
 		done
 	else
-		echo " *** As requested, not updating modules"
+		echo " *** As requested, not updating kernel modules"
 	fi
 }
 
@@ -158,6 +158,7 @@ function download_rev {
 	echo " *** Downloading specific firmware revision (this will take a few minutes)"
 	mkdir -p "${FW_REPOLOCAL}"
 	FW_TARBALL="${FW_REPOLOCAL}/${FW_REV}.tar.gz"
+	echo " *** Decompressing downloaded firmware archive"
 	wget "${REPO_URI}/tarball/${FW_REV}" -O "${FW_TARBALL}"
 	tar xzf "${FW_TARBALL}" -C "${FW_REPOLOCAL}" --strip-components=1
 	rm "${FW_TARBALL}"
