@@ -17,10 +17,11 @@ fi
 BRANCH=${BRANCH:-"master"}
 ROOT_PATH=${ROOT_PATH:-"/"}
 BOOT_PATH=${BOOT_PATH:-"/boot"}
+WORK_PATH=${WORK_PATH:-"${ROOT_PATH}/root"}
 SKIP_KERNEL=${SKIP_KERNEL:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
 FW_REPO="${REPO_URI}.git"
-FW_REPOLOCAL="${ROOT_PATH}/root/.rpi-firmware"
+FW_REPOLOCAL="${WORK_PATH}/.rpi-firmware"
 FW_PATH="${BOOT_PATH}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
 FW_REV=${1:-""}
@@ -43,7 +44,7 @@ function update_self() {
 		exit 1
 	fi
 
-	cat > /root/.updateScript.sh << EOF
+	cat > "${WORK_PATH}/.updateScript.sh" << EOF
 	if mv "${_tempFileName}" "$0"; then
 		rm -- "\$0"
 		exec env UPDATE_SELF=0 /bin/bash "$0" "${FW_REV}"
@@ -53,7 +54,7 @@ function update_self() {
 EOF
 
 	echo " *** Relaunching after update"
-	exec /bin/bash /root/.updateScript.sh
+	exec /bin/bash "${WORK_PATH}/.updateScript.sh"
 }
 
 function update_modules {
