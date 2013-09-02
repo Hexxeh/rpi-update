@@ -19,6 +19,7 @@ ROOT_PATH=${ROOT_PATH:-"/"}
 BOOT_PATH=${BOOT_PATH:-"/boot"}
 WORK_PATH=${WORK_PATH:-"${ROOT_PATH}/root"}
 SKIP_KERNEL=${SKIP_KERNEL:-0}
+SKIP_SDK=${SKIP_SDK:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
 FW_REPO="${REPO_URI}.git"
 FW_REPOLOCAL="${WORK_PATH}/.rpi-firmware"
@@ -71,8 +72,8 @@ function update_modules {
 	fi
 }
 
-function update_sdk {
-	echo " *** Updating SDK"
+function update_vc_libs {
+	echo " *** Updating VideoCore libraries"
 
 	ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/bash")
 	if [ "${ELFOUTPUT}" != "${ELFOUTPUT/VFP_args/}" ]; then
@@ -82,7 +83,15 @@ function update_sdk {
 		echo " *** Using SoftFP libraries"
 		cp -vR "${FW_REPOLOCAL}/vc/softfp/"* "${ROOT_PATH}/"
 	fi
-	cp -vR "${FW_REPOLOCAL}/vc/sdk/"* "${ROOT_PATH}/"
+}
+
+function update_sdk {
+	if [[ ${SKIP_SDK} -eq 0 ]]; then
+		echo " *** Updating SDK"
+		cp -vR "${FW_REPOLOCAL}/vc/sdk/"* "${ROOT_PATH}/"
+	else
+		echo " *** As requested, not updating SDK"
+	fi
 }
 
 function update_firmware {
@@ -148,6 +157,7 @@ function do_backup {
 function do_update {
 	update_firmware
 	update_modules
+	update_vc_libs
 	update_sdk
 	finalise
 	echo " *** If no errors appeared, your firmware was successfully $1"
