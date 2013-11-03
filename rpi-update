@@ -103,6 +103,9 @@ function update_firmware {
 	cp -v "${FW_REPOLOCAL}/"*.dat "${FW_PATH}/"
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
 		cp -v "${FW_REPOLOCAL}/"*.img "${FW_PATH}/"
+		if [[ -n $(shopt -s nullglob; echo "${FW_REPOLOCAL}/"*.dtb) ]]; then
+			cp -v "${FW_REPOLOCAL}/"*.dtb "${FW_PATH}/"
+		fi
 	else
 		echo " *** As requested, not updating kernel"
 	fi
@@ -155,11 +158,19 @@ function do_backup {
 }
 
 function do_update {
+	if [[ -f "${FW_REPOLOCAL}/pre-install" ]]; then
+		echo " *** Running pre-install script"
+		source "${FW_REPOLOCAL}/pre-install"
+	fi
 	update_firmware
 	update_modules
 	update_vc_libs
 	update_sdk
 	finalise
+	if [[ -f "${FW_REPOLOCAL}/post-install" ]]; then
+		echo " *** Running post-install script"
+		source "${FW_REPOLOCAL}/post-install"
+	fi
 	echo " *** If no errors appeared, your firmware was successfully $1"
 	if [[ "${ROOT_PATH}" == "/" ]]; then
 		echo " *** A reboot is needed to activate the new firmware"
