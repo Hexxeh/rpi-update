@@ -33,7 +33,7 @@ function update_self() {
 	echo " *** Performing self-update"
 	_tempFileName="$0.tmp"
 
-	if ! wget --output-document="${_tempFileName}" "${UPDATE_URI}"; then
+	if ! curl -L --output "${_tempFileName}" "${UPDATE_URI}"; then
 		echo " !!! Failed to download update for rpi-update!"
 		echo " !!! Make sure you have ca-certificates installed and that the time is set correctly"
 		exit 1
@@ -182,7 +182,7 @@ function download_rev {
 	mkdir -p "${FW_REPOLOCAL}"
 	FW_TARBALL="${FW_REPOLOCAL}/${FW_REV}.tar.gz"
 	echo " *** Decompressing downloaded firmware archive"
-	wget "${REPO_URI}/tarball/${FW_REV}" -O "${FW_TARBALL}"
+	curl -L --output "${FW_TARBALL}" "${REPO_URI}/tarball/${FW_REV}"
 	tar xzf "${FW_TARBALL}" -C "${FW_REPOLOCAL}" --strip-components=1
 	rm "${FW_TARBALL}"
 }
