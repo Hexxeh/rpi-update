@@ -221,7 +221,7 @@ command -v readelf >/dev/null 2>&1 || {
 
 # ask github for latest version hash
 REPO_API=${REPO_URI/github.com/api.github.com\/repos}/git/refs/heads/${BRANCH}
-GITREV=$(curl -s ${REPO_URI/github.com/api.github.com\/repos}/git/refs/heads/${BRANCH} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40) } }')
+GITREV=$(curl -s ${REPO_API} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40) } }')
 FW_REV=${FW_REV:-${GITREV}}
 
 if [[ "${FW_REV}" == "" ]]; then
