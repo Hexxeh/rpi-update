@@ -22,10 +22,11 @@ SKIP_KERNEL=${SKIP_KERNEL:-0}
 SKIP_SDK=${SKIP_SDK:-0}
 SKIP_REPODELETE=${SKIP_REPODELETE:-0}
 SKIP_BACKUP=${SKIP_BACKUP:-0}
+SKIP_DOWNLOAD=${SKIP_DOWNLOAD:-0}
 WANT_SYMVERS=${WANT_SYMVERS:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
 FW_REPO="${REPO_URI}.git"
-FW_REPOLOCAL="${WORK_PATH}/.rpi-firmware"
+FW_REPOLOCAL=${FW_REPOLOCAL:-"${WORK_PATH}/.rpi-firmware"}
 FW_PATH="${BOOT_PATH}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
 FW_REV=${1:-""}
@@ -178,10 +179,12 @@ function do_update {
 }
 
 function download_rev {
-	echo " *** Downloading specific firmware revision (this will take a few minutes)"
-	rm -rf "${FW_REPOLOCAL}"
-	mkdir -p "${FW_REPOLOCAL}"
-	curl -L "${REPO_URI}/tarball/${FW_REV}" | tar xzf - -C "${FW_REPOLOCAL}" --strip-components=1
+	if [[ ${SKIP_DOWNLOAD} -eq 0 ]]; then
+		echo " *** Downloading specific firmware revision (this will take a few minutes)"
+		rm -rf "${FW_REPOLOCAL}"
+		mkdir -p "${FW_REPOLOCAL}"
+		curl -L "${REPO_URI}/tarball/${FW_REV}" | tar xzf - -C "${FW_REPOLOCAL}" --strip-components=1
+	fi
 }
 
 function remove_rev {
