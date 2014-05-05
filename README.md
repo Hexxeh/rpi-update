@@ -2,13 +2,15 @@
 
 An easier way to update the firmware of your Raspberry Pi.
 
-## Installing under Raspbian
+## Installing
 
+### Installing under Raspbian
+ 
 To install the tool, run the following command:
 
     sudo apt-get install rpi-update
 
-### Installing
+### Installing under other OSes
 
 To install the tool, run the following command:
 
