@@ -101,7 +101,7 @@ function update_sdk {
 function update_firmware {
 	echo " *** Updating firmware"
 	rm -rf "${FW_PATH}/"*.elf
-	rm -rf "${FW_PATH}/"*.bin
+	rm -rf "${FW_PATH}/"bootcode.bin
 	cp "${FW_REPOLOCAL}/"*.elf "${FW_PATH}/"
 	cp "${FW_REPOLOCAL}/"*.bin "${FW_PATH}/"
 	cp "${FW_REPOLOCAL}/"*.dat "${FW_PATH}/"
