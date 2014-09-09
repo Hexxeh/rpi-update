@@ -149,7 +149,9 @@ function do_backup {
 				rm -rf "${FW_MODPATH}.bak"
 			fi
 			echo " *** Backing up modules $(uname -r)"
-			mkdir -p "${FW_MODPATH}.bak" && cp -a "${FW_MODPATH}/$(uname -r)" "${FW_MODPATH}.bak"
+			if [[ -f "${FW_MODPATH}/$(uname -r)" ]]; then
+				mkdir -p "${FW_MODPATH}.bak" && cp -a "${FW_MODPATH}/$(uname -r)" "${FW_MODPATH}.bak"
+			fi
 		fi
 	fi
 }
