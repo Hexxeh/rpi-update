@@ -25,6 +25,7 @@ SKIP_BACKUP=${SKIP_BACKUP:-0}
 SKIP_DOWNLOAD=${SKIP_DOWNLOAD:-0}
 WANT_SYMVERS=${WANT_SYMVERS:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
+JUST_CHECK=${JUST_CHECK:-0}
 FW_REPO="${REPO_URI}.git"
 FW_REPOLOCAL=${FW_REPOLOCAL:-"${WORK_PATH}/.rpi-firmware"}
 FW_PATH="${BOOT_PATH}"
@@ -238,11 +239,21 @@ fi
 
 if [[ ! -f "${FW_REVFILE}" ]]; then
 	echo " *** We're running for the first time"
+	if [[ ${JUST_CHECK} -ne 0 ]]; then
+		exit 2
+	fi
 	do_backup
 else
 	if [[ $(cat "${FW_REVFILE}") == "$FW_REV" ]]; then
 		echo " *** Your firmware is already up to date"
 		exit 0
+	fi
+	if [[ ${JUST_CHECK} -ne 0 ]]; then
+		echo " *** Firmware update required. New commits available:"
+		DIFF_API=${REPO_URI/github.com/api.github.com\/repos}/compare/$(cat "${FW_REVFILE}")...${BRANCH}
+		SEPARATOR="======================================================"
+		curl -s ${DIFF_API} | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "message") {print SEPARATOR "\n" $4} }' | sed 's/\\n/\n/g'
+		exit 2
 	fi
 fi
 
