@@ -80,7 +80,7 @@ function update_modules {
 function update_vc_libs {
 	echo " *** Updating VideoCore libraries"
 
-	ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/bash")
+	ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/sh")
 	if [ "${ELFOUTPUT}" != "${ELFOUTPUT/VFP_args/}" ]; then
 		echo " *** Using HardFP libraries"
 		cp -R "${FW_REPOLOCAL}/vc/hardfp/"* "${ROOT_PATH}/"
