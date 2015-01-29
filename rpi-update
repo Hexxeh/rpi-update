@@ -112,8 +112,11 @@ function update_firmware {
 			cp "${FW_REPOLOCAL}/"*.dtb "${FW_PATH}/"
 		fi
 		if [[ -n $(shopt -s nullglob; echo "${FW_REPOLOCAL}/overlays/"*.dtb) ]]; then
-			mkdir -p ${FW_PATH}/overlays
-			cp "${FW_REPOLOCAL}/overlays/"*.dtb "${FW_PATH}/overlays"
+			mkdir -p "${FW_PATH}/overlays"
+			cp "${FW_REPOLOCAL}/overlays/"*.dtb "${FW_PATH}/overlays/"
+			if [[ -f "${FW_REPOLOCAL}/overlays/README" ]]; then
+				cp "${FW_REPOLOCAL}/overlays/README" "${FW_PATH}/overlays/"
+			fi
 		fi
 	else
 		echo " *** As requested, not updating kernel"
