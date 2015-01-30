@@ -122,11 +122,11 @@ function update_firmware {
 		echo " *** As requested, not updating kernel"
 	fi
 	if [[ ${WANT_SYMVERS} -ne 0 ]]; then
-		if [[ -f "${FW_REPOLOCAL}/"Module.symvers ]]; then
-			cp "${FW_REPOLOCAL}/"Module.symvers "${FW_PATH}/"
+		if [[ -f "${FW_REPOLOCAL}/Module.symvers" ]]; then
+			cp "${FW_REPOLOCAL}/Module.symvers" "${FW_PATH}/"
 		fi
-		if [[ -f "${FW_REPOLOCAL}/"git_hash ]]; then
-			cp "${FW_REPOLOCAL}/"git_hash "${FW_PATH}/"
+		if [[ -f "${FW_REPOLOCAL}/git_hash" ]]; then
+			cp "${FW_REPOLOCAL}/git_hash" "${FW_PATH}/"
 		fi
 	fi
 }
@@ -239,9 +239,9 @@ FW_REV=${FW_REV:-${GITREV}}
 
 if [[ "${FW_REV}" == "" ]]; then
 	echo " *** No hash received from github: ${REPO_API}"
-  # run again with errors not suppressed
-  curl ${REPO_API}
-  exit 1
+	# run again with errors not suppressed
+	curl ${REPO_API}
+	exit 1
 fi
 
 if [[ ! -f "${FW_REVFILE}" ]]; then
@@ -251,7 +251,7 @@ if [[ ! -f "${FW_REVFILE}" ]]; then
 	fi
 	do_backup
 else
-	if [[ $(cat "${FW_REVFILE}") == "$FW_REV" ]]; then
+	if [[ $(cat "${FW_REVFILE}") == "${FW_REV}" ]]; then
 		echo " *** Your firmware is already up to date"
 		exit 0
 	fi
