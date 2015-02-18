@@ -66,6 +66,9 @@ EOF
 function update_modules {
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
 		echo " *** Updating kernel modules"
+		find "${FW_REPOLOCAL}/modules" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
+			rm -rf ${FW_MODPATH}/$(basename "${DIR}")
+		done
 		cp -R "${FW_REPOLOCAL}/modules/"* "${FW_MODPATH}/"
 		find "${FW_REPOLOCAL}/modules" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
 			BASEDIR=$(basename "${DIR}")
