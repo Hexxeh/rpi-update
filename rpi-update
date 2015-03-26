@@ -149,19 +149,19 @@ function finalise {
 function do_backup {
 	if [[ ${SKIP_BACKUP} -eq 0 ]]; then
 		echo " *** Backing up files (this will take a few minutes)"
-		if [[ -f "${FW_PATH}.bak" ]]; then
+		if [[ -d "${FW_PATH}.bak" ]]; then
 			echo " *** Remove old firmware backup"
 			rm -rf "${FW_PATH}.bak"
 		fi
 		echo " *** Backing up firmware"
 		cp -a "${FW_PATH}" "${FW_PATH}.bak"
 		if [[ ${SKIP_KERNEL} -eq 0 ]]; then
-			if [[ -f "${FW_MODPATH}.bak" ]]; then
+			if [[ -d "${FW_MODPATH}.bak" ]]; then
 				echo " *** Remove old modules backup"
 				rm -rf "${FW_MODPATH}.bak"
 			fi
 			echo " *** Backing up modules $(uname -r)"
-			if [[ -f "${FW_MODPATH}/$(uname -r)" ]]; then
+			if [[ -d "${FW_MODPATH}/$(uname -r)" ]]; then
 				mkdir -p "${FW_MODPATH}.bak" && cp -a "${FW_MODPATH}/$(uname -r)" "${FW_MODPATH}.bak"
 			fi
 		fi
