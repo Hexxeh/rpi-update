@@ -109,6 +109,22 @@ function update_sdk {
 	fi
 }
 
+function show_notice {
+	local NOTICE=`curl -Lfs https://raw.githubusercontent.com/hexxeh/rpi-firmware/${FW_REV}/NOTICE.md`
+	if [ -z "$NOTICE" ]; then
+		return
+	fi
+	echo "$NOTICE"
+	if ! echo "$NOTICE" | grep -q WARNING; then
+		return
+	fi
+	read -p "Would you like to proceed? (y/N)" -n 1 -r -s
+	echo ""
+	if ! [[ $REPLY =~ ^[Yy]$ ]]; then
+		exit 1;
+	fi
+}
+
 function update_firmware {
 	echo " *** Updating firmware"
 	rm -rf "${FW_PATH}/"*.elf
@@ -175,6 +191,7 @@ function do_backup {
 }
 
 function do_update {
+	show_notice
 	download_rev
 	if [[ -f "${FW_REPOLOCAL}/pre-install" ]]; then
 		echo " *** Running pre-install script"
@@ -313,7 +330,7 @@ else
 		echo " *** Firmware update required. New commits available:"
 		DIFF_API=${REPO_URI/github.com/api.github.com\/repos}/compare/$(cat "${FW_REVFILE}")...${BRANCH}
 		SEPARATOR="======================================================"
-		curl -s ${DIFF_API} | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "commits") {commits=1} if (commits && $2 == "message") {print SEPARATOR "\n" $4} }' | sed 's/\\n/\n/g'
+		curl -Ls ${DIFF_API} | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "commits") {commits=1} if (commits && $2 == "message") {print SEPARATOR "\n" $4} }' | sed 's/\\n/\n/g'
 		exit 2
 	fi
 fi
