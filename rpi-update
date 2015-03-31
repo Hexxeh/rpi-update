@@ -14,6 +14,12 @@ if [[ ${BOOT_PATH:-"unset"} == "unset" && ${ROOT_PATH:-"unset"} != "unset" ]] ||
 	exit 1
 fi
 
+if [[ ${BOOT_PATH:-"unset"} == "unset" ]]; then
+	NOOBS_CHECK=${NOOBS_CHECK:-1}
+else
+	NOOBS_CHECK=${NOOBS_CHECK:-0}
+fi
+
 BRANCH=${BRANCH:-"master"}
 ROOT_PATH=${ROOT_PATH:-"/"}
 BOOT_PATH=${BOOT_PATH:-"/boot"}
@@ -208,6 +214,46 @@ function remove_rev {
 	fi
 }
 
+function noobs_fix {
+	echo " !!! $BOOT_PATH appears to contain NOOBS files"
+	echo "     This may occur if fstab contains incorrect entries."
+	echo "     rpi-update will attempt to correct fstab."
+	read -p "Would you like to proceed? (y/N)" -n 1 -r -s
+	echo
+	if ! [[ $REPLY =~ ^[Yy]$ ]]; then
+		exit 1;
+	fi
+
+	if ! grep -qE "/dev/mmcblk0p1\s+/boot" ${ROOT_PATH}/etc/fstab; then
+		echo "Unexpected fstab entry"
+		exit 1
+	fi
+
+	local ROOTNUM=`cat /proc/cmdline | sed -n 's|.*root=/dev/mmcblk0p\([0-9]*\).*|\1|p'`
+	if [ ! "$ROOTNUM" ];then
+		echo "Could not determine root partition."
+		exit 1
+	fi
+	local BOOT_DEV="/dev/mmcblk0p$((ROOTNUM-1))"
+	local ROOT_DEV="/dev/mmcblk0p${ROOTNUM}"
+	sed ${ROOT_PATH}/etc/fstab -e "s|^.*[^#].* / |${ROOT_DEV}  / |;s|^.*[^#].* /boot |${BOOT_DEV}  /boot |"
+	read -p "Does this look correct?  (y/N)" -n 1 -r -s
+	echo
+	if ! [[ $REPLY =~ ^[Yy]$ ]]; then
+		exit 1;
+	fi
+	sed ${ROOT_PATH}/etc/fstab -i -e "s|^.*[^#].* / |${ROOT_DEV}  / |;s|^.*[^#].* /boot |${BOOT_DEV}  /boot |"
+
+	umount /boot
+	if [ $? -ne 0 ]; then
+		echo "Failed to umount /boot. Remount manually and try again."
+		exit 1
+	else
+		mount /boot
+	fi
+
+}
+
 if [[ ${EUID} -ne 0 ]]; then
 	echo " !!! This tool must be run as root"
 	exit 1
@@ -227,6 +273,10 @@ fi
 if [[ ${SKIP_KERNEL} -eq 0 ]] && [[ ! -d "${FW_MODPATH}" ]]; then
 	echo " !!! ${FW_MODPATH} doesn't exist"
 	exit 1
+fi
+
+if [[ ${NOOBS_CHECK} -eq 1 ]] && [[ -f ${BOOT_PATH}/recovery.elf ]]; then
+	noobs_fix
 fi
 
 command -v readelf >/dev/null 2>&1 || {
