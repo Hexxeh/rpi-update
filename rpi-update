@@ -90,8 +90,12 @@ function update_modules {
 function update_vc_libs {
 	echo " *** Updating VideoCore libraries"
 
-	ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/sh")
-	if [ "${ELFOUTPUT}" != "${ELFOUTPUT/VFP_args/}" ]; then
+	if [[ -e ${ROOT_PATH}/bin/sh ]]; then
+		ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/sh")
+	else
+		ELFOUTPUT="VFP_args"
+	fi
+	if [[ "${ELFOUTPUT}" != "${ELFOUTPUT/VFP_args/}" ]]; then
 		echo " *** Using HardFP libraries"
 		cp -R "${FW_REPOLOCAL}/vc/hardfp/"* "${ROOT_PATH}/"
 	else
@@ -162,8 +166,10 @@ function finalise {
 		echo " *** Setting 192M ARM split"
 		cp "${FW_PATH}/arm192_start.elf" "${FW_PATH}/start.elf"
 	fi
-	echo " *** Running ldconfig"
-	ldconfig -r "${ROOT_PATH}"
+	if [[ -e ${ROOT_PATH}/etc ]]; then
+		echo " *** Running ldconfig"
+		ldconfig -r "${ROOT_PATH}"
+	fi
 	echo " *** Storing current firmware revision"
 	echo "${FW_REV}" > "${FW_REVFILE}"
 }
@@ -278,18 +284,23 @@ fi
 
 echo " *** Raspberry Pi firmware updater by Hexxeh, enhanced by AndrewS and Dom"
 
+if [[ ! -d ${WORK_PATH} ]]; then
+	echo " !!! ${WORK_PATH} doesn't exist - creating"
+	mkdir -p ${WORK_PATH}
+fi
+
 if [[ ${UPDATE_SELF} -ne 0 ]]; then
 	update_self
 fi
 
 if [[ ! -d "${FW_PATH}" ]]; then
-	echo " !!! ${FW_PATH} doesn't exist"
-	exit 1
+	echo " !!! ${FW_PATH} doesn't exist - creating"
+	mkdir -p ${FW_PATH}
 fi
 
 if [[ ${SKIP_KERNEL} -eq 0 ]] && [[ ! -d "${FW_MODPATH}" ]]; then
-	echo " !!! ${FW_MODPATH} doesn't exist"
-	exit 1
+	echo " !!! ${FW_MODPATH} doesn't exist - creating"
+	mkdir -p ${FW_MODPATH}
 fi
 
 if [[ ${NOOBS_CHECK} -eq 1 ]] && [[ -f ${BOOT_PATH}/recovery.elf ]]; then
