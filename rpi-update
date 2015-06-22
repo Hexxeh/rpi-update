@@ -29,6 +29,7 @@ SKIP_SDK=${SKIP_SDK:-0}
 SKIP_REPODELETE=${SKIP_REPODELETE:-0}
 SKIP_BACKUP=${SKIP_BACKUP:-0}
 SKIP_DOWNLOAD=${SKIP_DOWNLOAD:-0}
+SKIP_WARNING=${SKIP_WARNING:-0}
 WANT_SYMVERS=${WANT_SYMVERS:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
 JUST_CHECK=${JUST_CHECK:-0}
@@ -120,6 +121,9 @@ function show_notice {
 	fi
 	echo "$NOTICE"
 	if ! echo "$NOTICE" | grep -q WARNING; then
+		return
+	fi
+	if [[ ${SKIP_WARNING} -ne 0 ]]; then
 		return
 	fi
 	read -p "Would you like to proceed? (y/N)" -n 1 -r -s
