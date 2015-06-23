@@ -116,7 +116,7 @@ function update_sdk {
 
 function show_notice {
 	local NOTICE=`curl -Lfs https://raw.githubusercontent.com/hexxeh/rpi-firmware/${FW_REV}/NOTICE.md`
-	if [ -z "$NOTICE" ]; then
+	if [ -z "$NOTICE" ] || [ $(uname -r|awk -F. '{print $1}') -ge 4 ]; then
 		return
 	fi
 	echo "$NOTICE"
