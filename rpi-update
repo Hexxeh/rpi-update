@@ -115,8 +115,14 @@ function update_sdk {
 }
 
 function show_notice {
-	local NOTICE=`curl -Lfs https://raw.githubusercontent.com/hexxeh/rpi-firmware/${FW_REV}/NOTICE.md`
-	if [ -z "$NOTICE" ] || [ $(uname -r|awk -F. '{print $1}') -ge 4 ]; then
+	local FULL_NOTICE=`curl -Lfs https://raw.githubusercontent.com/hexxeh/rpi-firmware/${FW_REV}/NOTICE.md`
+	local NOTICE=$(echo "$FULL_NOTICE" | tail -n+2)
+	local NOTICE_HASH=$(echo "$FULL_NOTICE" | head -1 | awk '{print $2}')
+	local LOCAL_HASH=$(cat "$FW_REVFILE")
+	local NEW_HASH=${FW_REV}
+	local LOCAL_lt_NOTICE=$(compare_hashes ${LOCAL_HASH} lt ${NOTICE_HASH})
+	local NEW_ge_NOTICE=$(compare_hashes ${NEW_HASH} ge ${NOTICE_HASH})
+	if [ -z "$NOTICE" ] || ! ${LOCAL_lt_NOTICE} && ! ${NEW_ge_NOTICE}; then
 		return
 	fi
 	echo "$NOTICE"
@@ -279,6 +285,21 @@ function noobs_fix {
 		mount /boot
 	fi
 
+}
+
+function get_hash_date {
+	commit_api="https://api.github.com/repos/Hexxeh/rpi-firmware/git/commits/"
+	wget -qO- "$commit_api"$1 | grep "date" | head -1 | awk -F\" '{print $4}'
+}
+
+function compare_hashes {
+	date1=$(get_hash_date $1)
+	date2=$(get_hash_date $3)
+	if [ $(date -d "$date1" +%s) -$2 $(date -d "$date2" +%s) ]; then
+		echo true
+	else
+		echo false
+	fi
 }
 
 if [[ ${EUID} -ne 0 ]]; then
