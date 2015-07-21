@@ -45,7 +45,7 @@ function update_self() {
 	echo " *** Performing self-update"
 	_tempFileName="$0.tmp"
 
-	if ! curl -L --output "${_tempFileName}" "${UPDATE_URI}"; then
+	if ! curl -Ls --output "${_tempFileName}" "${UPDATE_URI}"; then
 		echo " !!! Failed to download update for rpi-update!"
 		echo " !!! Make sure you have ca-certificates installed and that the time is set correctly"
 		exit 1
