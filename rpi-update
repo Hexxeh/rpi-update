@@ -345,7 +345,7 @@ else
 		echo " *** Firmware update required. New commits available:"
 		DIFF_API=${REPO_URI/github.com/api.github.com\/repos}/compare/$(cat "${FW_REVFILE}")...${BRANCH}
 		SEPARATOR="======================================================"
-		curl -Ls ${DIFF_API} | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "commits") {commits=1} if (commits && $2 == "message") {print SEPARATOR "\n" $4} }' | sed 's/\\n/\n/g'
+		curl -Ls ${DIFF_API} | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "commits") {commits=1} if (commits && $2 == "message") {print SEPARATOR "\nCommit: " $4} }' | sed 's/\\n\\n/\nCommit:\ /g'
 		exit 2
 	fi
 fi
