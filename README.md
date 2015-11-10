@@ -87,6 +87,15 @@ from the specified branch, eg:
 
 will use the 'next' branch.
 
+#### `PRUNE_MODULES`
+
+Allows you to delete unused module directories when doing an update. Set it equal to a non-zero value and it will remove all modules except the latest installed:
+
+    sudo PRUNE_MODULES=1 rpi-update
+
+will remove previously installed module files. Use this option to free disk space used by older module updates.
+
+
 #### Troubleshooting
 
 There are two possible problems related to SSL certificates that may prevent
