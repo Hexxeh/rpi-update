@@ -31,6 +31,7 @@ SKIP_BACKUP=${SKIP_BACKUP:-0}
 SKIP_DOWNLOAD=${SKIP_DOWNLOAD:-0}
 SKIP_WARNING=${SKIP_WARNING:-0}
 WANT_SYMVERS=${WANT_SYMVERS:-0}
+PRUNE_MODULES=${PRUNE_MODULES:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
 JUST_CHECK=${JUST_CHECK:-0}
 FW_REPO="${REPO_URI}.git"
@@ -77,6 +78,19 @@ function update_modules {
 			BASEDIR=$(basename "${DIR}")
 			rm -rf "${FW_MODPATH}/${BASEDIR}/kernel"
 		done
+
+		if [[ ${PRUNE_MODULES} -ne 0 ]]; then
+			find "${FW_MODPATH}" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
+				COUNT=$(find ${DIR} -type f ! \( -name '*.ko' -o -name 'modules.*' \) | wc -l);
+				if [[ ${COUNT} -eq 0 ]]; then
+					echo "Pruning ${DIR}"
+					rm -rf ${DIR}
+				else
+					echo "Keeping ${DIR}"
+				fi
+			done
+		fi
+
 		cp -R "${FW_REPOLOCAL}/modules/"* "${FW_MODPATH}/"
 		find "${FW_REPOLOCAL}/modules" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
 			BASEDIR=$(basename "${DIR}")
