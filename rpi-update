@@ -106,11 +106,12 @@ function update_vc_libs {
 	echo " *** Updating VideoCore libraries"
 
 	if [[ -e ${ROOT_PATH}/bin/sh ]]; then
-		ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/sh")
+		ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/sh"; readelf -h "${ROOT_PATH}/bin/sh")
 	else
 		ELFOUTPUT="VFP_args"
 	fi
-	if [[ "${ELFOUTPUT}" != "${ELFOUTPUT/VFP_args/}" ]]; then
+	if [[ "${ELFOUTPUT}" != "${ELFOUTPUT/VFP_args/}" || \
+			"${ELFOUTPUT}" != "${ELFOUTPUT/hard-float/}" ]]; then
 		echo " *** Using HardFP libraries"
 		cp -R "${FW_REPOLOCAL}/vc/hardfp/"* "${ROOT_PATH}/"
 	else
