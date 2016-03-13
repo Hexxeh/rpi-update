@@ -157,12 +157,12 @@ function update_firmware {
 	cp "${FW_REPOLOCAL}/"*.dat "${FW_PATH}/"
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
 		cp "${FW_REPOLOCAL}/"*.img "${FW_PATH}/"
-		if [[ -n $(shopt -s nullglob; echo "${FW_REPOLOCAL}/"*.dtb) ]]; then
-			cp "${FW_REPOLOCAL}/"*.dtb "${FW_PATH}/"
+		if [[ -n $(shopt -s nullglob; echo "${FW_REPOLOCAL}/"*.dtb*) ]]; then
+			cp "${FW_REPOLOCAL}/"*.dtb* "${FW_PATH}/"
 		fi
-		if [[ -n $(shopt -s nullglob; echo "${FW_REPOLOCAL}/overlays/"*.dtb) ]]; then
+		if [[ -n $(shopt -s nullglob; echo "${FW_REPOLOCAL}/overlays/"*.dtb*) ]]; then
 			mkdir -p "${FW_PATH}/overlays"
-			cp "${FW_REPOLOCAL}/overlays/"*.dtb "${FW_PATH}/overlays/"
+			cp "${FW_REPOLOCAL}/overlays/"*.dtb* "${FW_PATH}/overlays/"
 			if [[ -f "${FW_REPOLOCAL}/overlays/README" ]]; then
 				cp "${FW_REPOLOCAL}/overlays/README" "${FW_PATH}/overlays/"
 			fi
