@@ -117,13 +117,25 @@ function update_sdk {
 function show_notice {
 	local FULL_NOTICE=`curl -Lfs https://raw.githubusercontent.com/hexxeh/rpi-firmware/${FW_REV}/NOTICE.md`
 	local NOTICE=$(echo "$FULL_NOTICE" | tail -n+2)
-	local NOTICE_HASH=$(echo "$FULL_NOTICE" | head -1 | awk '{print $2}')
-	local LOCAL_HASH=$(cat "$FW_REVFILE")
-	local NEW_HASH=${FW_REV}
-	local LOCAL_lt_NOTICE=$(compare_hashes ${LOCAL_HASH} lt ${NOTICE_HASH})
-	local NEW_ge_NOTICE=$(compare_hashes ${NEW_HASH} ge ${NOTICE_HASH})
-	if [ -z "$NOTICE" ] || ! ${LOCAL_lt_NOTICE} && ! ${NEW_ge_NOTICE}; then
-		return
+	local NOTICE_HASH_HEAD=$(echo "$FULL_NOTICE" | head -1)
+	if [ $(echo "${NOTICE_HASH_HEAD}" | awk -F: '{print $1}') == "HASH" ]; then
+		local NOTICE_HASH_EXISTS = true
+		local NOTICE_HASH=$(echo "${NOTICE_HASH_HEAD}" | awk '{print $2}')
+	else
+		local NOTICE_HASH_EXISTS = false
+	fi
+	if [ -f "$FW_REVFILE" ]; then
+		local LOCAL_HASH=$(cat "$FW_REVFILE")
+	else
+		local LOCAL_HASH=0
+	fi
+	if ${NOTICE_HASH_EXISTS}; then
+		local NEW_HASH=${FW_REV}
+		local LOCAL_lt_NOTICE=$(compare_hashes ${LOCAL_HASH} lt ${NOTICE_HASH})
+		local NEW_ge_NOTICE=$(compare_hashes ${NEW_HASH} ge ${NOTICE_HASH})
+		if [ -z "$NOTICE" ] || ! ${LOCAL_lt_NOTICE} && ! ${NEW_ge_NOTICE}; then
+			return
+		fi
 	fi
 	echo "$NOTICE"
 	if ! echo "$NOTICE" | grep -q WARNING; then
