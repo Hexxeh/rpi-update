@@ -304,7 +304,7 @@ function noobs_fix {
 
 function get_hash_date {
 	commit_api="https://api.github.com/repos/Hexxeh/rpi-firmware/git/commits/"
-	curl -s "$commit_api"$1 | grep "date" | head -1 | awk -F\" '{print $4}'
+	curl -Ls "$commit_api"$1 | grep "date" | head -1 | awk -F\" '{print $4}'
 }
 
 function compare_hashes {
@@ -356,13 +356,13 @@ command -v readelf >/dev/null 2>&1 || {
 
 # ask github for latest version hash
 REPO_API=${REPO_URI/github.com/api.github.com\/repos}/git/refs/heads/${BRANCH}
-GITREV=$(curl -s ${REPO_API} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40) } }')
+GITREV=$(curl -Ls ${REPO_API} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40) } }')
 FW_REV=${FW_REV:-${GITREV}}
 
 if [[ "${FW_REV}" == "" ]]; then
 	echo " *** No hash received from github: ${REPO_API}"
 	# run again with errors not suppressed
-	curl ${REPO_API}
+	curl -L ${REPO_API}
 	exit 1
 fi
 
