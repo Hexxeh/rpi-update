@@ -122,10 +122,10 @@ function show_notice {
 	fi
 	local NOTICE_HASH_HEAD=$(echo "$FULL_NOTICE" | head -1)
 	if [ $(echo "${NOTICE_HASH_HEAD}" | awk -F: '{print $1}') == "HASH" ]; then
-		local NOTICE_HASH_EXISTS = true
+		local NOTICE_HASH_EXISTS=true
 		local NOTICE_HASH=$(echo "${NOTICE_HASH_HEAD}" | awk '{print $2}')
 	else
-		local NOTICE_HASH_EXISTS = false
+		local NOTICE_HASH_EXISTS=false
 	fi
 	if [ -f "$FW_REVFILE" ]; then
 		local LOCAL_HASH=$(cat "$FW_REVFILE")
