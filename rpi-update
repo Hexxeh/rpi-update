@@ -304,7 +304,7 @@ function noobs_fix {
 
 function get_hash_date {
 	commit_api="https://api.github.com/repos/Hexxeh/rpi-firmware/git/commits/"
-	wget -qO- "$commit_api"$1 | grep "date" | head -1 | awk -F\" '{print $4}'
+	curl -s "$commit_api"$1 | grep "date" | head -1 | awk -F\" '{print $4}'
 }
 
 function compare_hashes {
