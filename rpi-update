@@ -117,6 +117,9 @@ function update_sdk {
 function show_notice {
 	local FULL_NOTICE=`curl -Lfs https://raw.githubusercontent.com/hexxeh/rpi-firmware/${FW_REV}/NOTICE.md`
 	local NOTICE=$(echo "$FULL_NOTICE" | tail -n+2)
+	if [ -z "$NOTICE" ]; then
+		return
+	fi
 	local NOTICE_HASH_HEAD=$(echo "$FULL_NOTICE" | head -1)
 	if [ $(echo "${NOTICE_HASH_HEAD}" | awk -F: '{print $1}') == "HASH" ]; then
 		local NOTICE_HASH_EXISTS = true
@@ -133,7 +136,7 @@ function show_notice {
 		local NEW_HASH=${FW_REV}
 		local LOCAL_lt_NOTICE=$(compare_hashes ${LOCAL_HASH} lt ${NOTICE_HASH})
 		local NEW_ge_NOTICE=$(compare_hashes ${NEW_HASH} ge ${NOTICE_HASH})
-		if [ -z "$NOTICE" ] || ! ${LOCAL_lt_NOTICE} && ! ${NEW_ge_NOTICE}; then
+		if ! ${LOCAL_lt_NOTICE} && ! ${NEW_ge_NOTICE}; then
 			return
 		fi
 	fi
