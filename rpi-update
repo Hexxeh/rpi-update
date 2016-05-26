@@ -139,6 +139,8 @@ function show_notice {
 		if ! ${LOCAL_lt_NOTICE} && ! ${NEW_ge_NOTICE}; then
 			return
 		fi
+	else
+		NOTICE="$FULL_NOTICE"
 	fi
 	echo "$NOTICE"
 	if ! echo "$NOTICE" | grep -q WARNING; then
