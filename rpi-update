@@ -130,9 +130,32 @@ function update_sdk {
 }
 
 function show_notice {
-	local NOTICE=`curl -Lfs https://raw.githubusercontent.com/hexxeh/rpi-firmware/${FW_REV}/NOTICE.md`
+	local FULL_NOTICE=`curl -Lfs https://raw.githubusercontent.com/hexxeh/rpi-firmware/${FW_REV}/NOTICE.md`
+	local NOTICE=$(echo "$FULL_NOTICE" | tail -n+2)
 	if [ -z "$NOTICE" ]; then
 		return
+	fi
+	local NOTICE_HASH_HEAD=$(echo "$FULL_NOTICE" | head -1)
+	if [ $(echo "${NOTICE_HASH_HEAD}" | awk -F: '{print $1}') == "HASH" ]; then
+		local NOTICE_HASH_EXISTS=true
+		local NOTICE_HASH=$(echo "${NOTICE_HASH_HEAD}" | awk '{print $2}')
+	else
+		local NOTICE_HASH_EXISTS=false
+	fi
+	if [ -f "$FW_REVFILE" ]; then
+		local LOCAL_HASH=$(cat "$FW_REVFILE")
+	else
+		local LOCAL_HASH=0
+	fi
+	if ${NOTICE_HASH_EXISTS}; then
+		local NEW_HASH=${FW_REV}
+		local LOCAL_lt_NOTICE=$(compare_hashes ${LOCAL_HASH} lt ${NOTICE_HASH})
+		local NEW_ge_NOTICE=$(compare_hashes ${NEW_HASH} ge ${NOTICE_HASH})
+		if ! ${LOCAL_lt_NOTICE} && ! ${NEW_ge_NOTICE}; then
+			return
+		fi
+	else
+		NOTICE="$FULL_NOTICE"
 	fi
 	echo "$NOTICE"
 	if ! echo "$NOTICE" | grep -q WARNING; then
@@ -299,6 +322,21 @@ function noobs_fix {
 
 }
 
+function get_hash_date {
+	commit_api="https://api.github.com/repos/Hexxeh/rpi-firmware/git/commits/"
+	curl -Ls "$commit_api"$1 | grep "date" | head -1 | awk -F\" '{print $4}'
+}
+
+function compare_hashes {
+	date1=$(get_hash_date $1)
+	date2=$(get_hash_date $3)
+	if [ $(date -d "$date1" +%s) -$2 $(date -d "$date2" +%s) ]; then
+		echo true
+	else
+		echo false
+	fi
+}
+
 if [[ ${EUID} -ne 0 ]]; then
 	echo " !!! This tool must be run as root"
 	exit 1
@@ -338,13 +376,13 @@ command -v readelf >/dev/null 2>&1 || {
 
 # ask github for latest version hash
 REPO_API=${REPO_URI/github.com/api.github.com\/repos}/git/refs/heads/${BRANCH}
-GITREV=$(curl -s ${REPO_API} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40) } }')
+GITREV=$(curl -Ls ${REPO_API} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40) } }')
 FW_REV=${FW_REV:-${GITREV}}
 
 if [[ "${FW_REV}" == "" ]]; then
 	echo " *** No hash received from github: ${REPO_API}"
 	# run again with errors not suppressed
-	curl ${REPO_API}
+	curl -L ${REPO_API}
 	exit 1
 fi
 
