@@ -174,6 +174,9 @@ function update_firmware {
 		if [[ -f "${FW_REPOLOCAL}/Module.symvers" ]]; then
 			cp "${FW_REPOLOCAL}/Module.symvers" "${FW_PATH}/"
 		fi
+		if [[ -f "${FW_REPOLOCAL}/Module7.symvers" ]]; then
+			cp "${FW_REPOLOCAL}/Module7.symvers" "${FW_PATH}/"
+		fi
 		if [[ -f "${FW_REPOLOCAL}/git_hash" ]]; then
 			cp "${FW_REPOLOCAL}/git_hash" "${FW_PATH}/"
 		fi
