@@ -266,6 +266,10 @@ function do_update {
 
 function download_rev {
 	if [[ ${SKIP_DOWNLOAD} -eq 0 ]]; then
+		if ! curl -L --output /dev/null --silent --head --fail "${REPO_URI}/tarball/${FW_REV}"; then
+			echo "Invalid git hash specified"
+			exit 1
+		fi
 		echo " *** Downloading specific firmware revision (this will take a few minutes)"
 		rm -rf "${FW_REPOLOCAL}"
 		mkdir -p "${FW_REPOLOCAL}"
