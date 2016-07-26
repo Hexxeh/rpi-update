@@ -124,18 +124,22 @@ function show_notice {
 	if [ $(echo "${NOTICE_HASH_HEAD}" | awk -F: '{print $1}') == "HASH" ]; then
 		local NOTICE_HASH_EXISTS=true
 		local NOTICE_HASH=$(echo "${NOTICE_HASH_HEAD}" | awk '{print $2}')
+		local NOTICE_HASH_DATE=$(get_hash_date ${NOTICE_HASH})
 	else
 		local NOTICE_HASH_EXISTS=false
 	fi
 	if [ -f "$FW_REVFILE" ]; then
 		local LOCAL_HASH=$(cat "$FW_REVFILE")
+		local LOCAL_HASH_DATE=$(get_hash_date ${LOCAL_HASH})
 	else
 		local LOCAL_HASH=0
+		local LOCAL_HASH_DATE=0
 	fi
 	if ${NOTICE_HASH_EXISTS}; then
 		local NEW_HASH=${FW_REV}
-		local LOCAL_lt_NOTICE=$(compare_hashes ${LOCAL_HASH} lt ${NOTICE_HASH})
-		local NEW_ge_NOTICE=$(compare_hashes ${NEW_HASH} ge ${NOTICE_HASH})
+		local NEW_HASH_DATE=$(get_hash_date ${NEW_HASH})
+		local LOCAL_lt_NOTICE=$(compare_hashes "${LOCAL_HASH_DATE}" lt "${NOTICE_HASH_DATE}")
+		local NEW_ge_NOTICE=$(compare_hashes "${NEW_HASH_DATE}" ge "${NNOTICE_HASH_DATE}")
 		if ! ${LOCAL_lt_NOTICE} && ! ${NEW_ge_NOTICE}; then
 			return
 		fi
@@ -310,9 +314,7 @@ function get_hash_date {
 }
 
 function compare_hashes {
-	date1=$(get_hash_date $1)
-	date2=$(get_hash_date $3)
-	if [ $(date -d "$date1" +%s) -$2 $(date -d "$date2" +%s) ]; then
+	if [ $(date -d "$1" +%s) -$2 $(date -d "$3" +%s) ]; then
 		echo true
 	else
 		echo false
