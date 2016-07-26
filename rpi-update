@@ -130,7 +130,6 @@ function show_notice {
 	fi
 	if [ -f "$FW_REVFILE" ]; then
 		local LOCAL_HASH=$(cat "$FW_REVFILE")
-		local LOCAL_HASH_DATE=$(get_hash_date ${LOCAL_HASH})
 	else
 		local LOCAL_HASH=0
 		local LOCAL_HASH_DATE=0
@@ -138,6 +137,9 @@ function show_notice {
 	if ${NOTICE_HASH_EXISTS}; then
 		local NEW_HASH=${FW_REV}
 		local NEW_HASH_DATE=$(get_hash_date ${NEW_HASH})
+		if [ -f "$FW_REVFILE" ]; then
+			local LOCAL_HASH_DATE=$(get_hash_date ${LOCAL_HASH})
+		fi
 		local LOCAL_lt_NOTICE=$(compare_hashes "${LOCAL_HASH_DATE}" lt "${NOTICE_HASH_DATE}")
 		local NEW_ge_NOTICE=$(compare_hashes "${NEW_HASH_DATE}" ge "${NNOTICE_HASH_DATE}")
 		if ! ${LOCAL_lt_NOTICE} && ! ${NEW_ge_NOTICE}; then
