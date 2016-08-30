@@ -32,7 +32,7 @@ Backing up before updating is always advisable.
 ## Installing
 
 ### Installing under Raspbian
- 
+
 To install the tool, run the following command:
 
     sudo apt-get install rpi-update
@@ -82,6 +82,13 @@ You can disable this behavior by:
 
 Will update everything **except** the `kernel.img` files and the kernel modules.
 Use with caution, some firmware updates might depend on a kernel update.
+
+#### `SKIP_FIRMWARE`
+
+    sudo SKIP_FIRMWARE=1 rpi-update
+
+Will force `SKIP_KERNEL=1 and also skip the `kernel.img` files and the kernel modules.
+This effectively only installs the userland and SDK.
 
 #### `SKIP_BACKUP`
 
