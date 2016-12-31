@@ -130,6 +130,14 @@ To just get a list of commits contained in rpi-update since you last updated, ru
 
 This won't update your firmware
 
+#### `QUIET_MODE`
+
+Makes curl quiet.
+
+    sudo QUIET_MODE=1 rpi-update
+
+This only changes the verbosity of curl.
+
 #### Troubleshooting
 
 There are two possible problems related to SSL certificates that may prevent
