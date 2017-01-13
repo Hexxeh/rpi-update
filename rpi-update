@@ -46,7 +46,7 @@ function update_self() {
 	echo " *** Performing self-update"
 	_tempFileName="$0.tmp"
 
-	if ! curl -Ls --output "${_tempFileName}" "${UPDATE_URI}"; then
+	if ! curl -Lfs --output "${_tempFileName}" "${UPDATE_URI}"; then
 		echo " !!! Failed to download update for rpi-update!"
 		echo " !!! Make sure you have ca-certificates installed and that the time is set correctly"
 		exit 1
@@ -266,7 +266,7 @@ function do_update {
 
 function download_rev {
 	if [[ ${SKIP_DOWNLOAD} -eq 0 ]]; then
-		if ! curl -L --output /dev/null --silent --head --fail "${REPO_URI}/tarball/${FW_REV}"; then
+		if ! curl -Lfs --output /dev/null --head --fail "${REPO_URI}/tarball/${FW_REV}"; then
 			echo "Invalid git hash specified"
 			exit 1
 		fi
