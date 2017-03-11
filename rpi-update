@@ -41,6 +41,7 @@ FW_MODPATH="${ROOT_PATH}/lib/modules"
 FW_REV=${1:-""}
 FW_REVFILE="${FW_PATH}/.firmware_revision"
 [ "${RPI_UPDATE_UNSUPPORTED}" -ne 0 ] && echo -e "You appear to be trying to update firmware on an incompatible distribution. To force update, run the following:\nsudo -E RPI_UPDATE_UNSUPPORTED=0 rpi-update" && exit 1
+[ `vcgencmd get_config str | egrep "^kernel="` ] && echo -e "You appear to be using a custom kernel file.\nSkipping installation of new kernel, as bundled dtb files may be incompatible with your kernel." && SKIP_KERNEL=1
 
 function update_self() {
 	echo " *** Performing self-update"
