@@ -34,6 +34,7 @@ WANT_SYMVERS=${WANT_SYMVERS:-0}
 PRUNE_MODULES=${PRUNE_MODULES:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
 JUST_CHECK=${JUST_CHECK:-0}
+GITHUB_API_TOKEN=${GITHUB_API_TOKEN:-""}
 FW_REPO="${REPO_URI}.git"
 FW_REPOLOCAL=${FW_REPOLOCAL:-"${WORK_PATH}/.rpi-firmware"}
 FW_PATH="${BOOT_PATH}"
@@ -46,11 +47,18 @@ if command -v vcgencmd > /dev/null; then
     vcgencmd get_config str | grep -qE "^kernel=" && echo -e "You appear to be using a custom kernel file.\nSkipping installation of new kernel, as bundled dtb files may be incompatible with your kernel." && SKIP_KERNEL=1
 fi
 
+# Support for custom GitHub Auth Tokens
+GITHUB_AUTH_PARAM=""
+if [[ -n "${GITHUB_API_TOKEN}" ]]; then
+	echo " *** Using GitHub token for all requests."
+	GITHUB_AUTH_PARAM="--header \"Authorization: token ${GITHUB_API_TOKEN}\""
+fi
+
 function update_self() {
 	echo " *** Performing self-update"
 	_tempFileName="$0.tmp"
 
-	if ! curl -Lfs --output "${_tempFileName}" "${UPDATE_URI}"; then
+	if ! eval curl -Lfs ${GITHUB_AUTH_PARAM} --output "${_tempFileName}" "${UPDATE_URI}"; then
 		echo " !!! Failed to download update for rpi-update!"
 		echo " !!! Make sure you have ca-certificates installed and that the time is set correctly"
 		exit 1
@@ -134,7 +142,7 @@ function update_sdk {
 }
 
 function show_notice {
-	local FULL_NOTICE=`curl -Lfs https://raw.githubusercontent.com/hexxeh/rpi-firmware/${FW_REV}/NOTICE.md`
+	local FULL_NOTICE=`eval curl -Lfs ${GITHUB_AUTH_PARAM} https://raw.githubusercontent.com/hexxeh/rpi-firmware/${FW_REV}/NOTICE.md`
 	local NOTICE=$(echo "$FULL_NOTICE" | tail -n+2)
 	if [ -z "$NOTICE" ]; then
 		return
@@ -270,14 +278,14 @@ function do_update {
 
 function download_rev {
 	if [[ ${SKIP_DOWNLOAD} -eq 0 ]]; then
-		if ! curl -Lfs --output /dev/null --head --fail "${REPO_URI}/tarball/${FW_REV}"; then
+		if ! eval curl -Lfs ${GITHUB_AUTH_PARAM} --output /dev/null --head --fail "${REPO_URI}/tarball/${FW_REV}"; then
 			echo "Invalid git hash specified"
 			exit 1
 		fi
 		echo " *** Downloading specific firmware revision (this will take a few minutes)"
 		rm -rf "${FW_REPOLOCAL}"
 		mkdir -p "${FW_REPOLOCAL}"
-		curl -L "${REPO_URI}/tarball/${FW_REV}" | tar xzf - -C "${FW_REPOLOCAL}" --strip-components=1
+		eval curl -L ${GITHUB_AUTH_PARAM} "${REPO_URI}/tarball/${FW_REV}" | tar xzf - -C "${FW_REPOLOCAL}" --strip-components=1
 	fi
 }
 
@@ -330,7 +338,7 @@ function noobs_fix {
 
 function get_hash_date {
 	commit_api="https://api.github.com/repos/Hexxeh/rpi-firmware/git/commits/"
-	curl -Ls "$commit_api"$1 | grep "date" | head -1 | awk -F\" '{print $4}'
+	eval curl -Ls ${GITHUB_AUTH_PARAM} "$commit_api"$1 | grep "date" | head -1 | awk -F\" '{print $4}'
 }
 
 function compare_hashes {
@@ -383,11 +391,11 @@ command -v readelf >/dev/null 2>&1 || {
 if [[ "${FW_REV}" == "" ]]; then
 	# ask github for latest version hash
 	REPO_API=${REPO_URI/github.com/api.github.com\/repos}/git/refs/heads/${BRANCH}
-	FW_REV=$(curl -Ls ${REPO_API} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40) } }')
+	FW_REV=$(eval curl -Ls ${GITHUB_AUTH_PARAM} ${REPO_API} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40) } }')
 	if [[ "${FW_REV}" == "" ]]; then
 		echo " *** No hash received from github: ${REPO_API}"
 		# run again with errors not suppressed
-		curl -L ${REPO_API}
+		eval curl -L ${GITHUB_AUTH_PARAM} ${REPO_API}
 		exit 1
 	fi
 fi
@@ -407,7 +415,7 @@ else
 		echo " *** Firmware update required. New commits available:"
 		DIFF_API=${REPO_URI/github.com/api.github.com\/repos}/compare/$(cat "${FW_REVFILE}")...${BRANCH}
 		SEPARATOR="======================================================"
-		curl -Ls ${DIFF_API} | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "commits") {commits=1} if (commits && $2 == "message") {print SEPARATOR "\nCommit: " $4} }' | sed 's/\\n\\n/\nCommit:\ /g'
+		eval curl -Ls ${GITHUB_AUTH_PARAM} ${DIFF_API} | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "commits") {commits=1} if (commits && $2 == "message") {print SEPARATOR "\nCommit: " $4} }' | sed 's/\\n\\n/\nCommit:\ /g'
 		exit 2
 	fi
 fi
