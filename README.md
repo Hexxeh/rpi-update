@@ -130,7 +130,12 @@ To just get a list of commits contained in rpi-update since you last updated, ru
 
 This won't update your firmware
 
-#### Troubleshooting
+#### `GITHUB_API_TOKEN`
+
+By default, `rpi-update` will not use a custom GitHub API token. If you run into rate limiting issues, you can supply an API token on the command line:
+
+	sudo GITHUB_API_TOKEN=<your API token> rpi-update
+
 
 There are two possible problems related to SSL certificates that may prevent
 this tool from working.
