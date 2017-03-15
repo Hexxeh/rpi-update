@@ -136,6 +136,7 @@ By default, `rpi-update` will not use a custom GitHub API token. If you run into
 
 	sudo GITHUB_API_TOKEN=<your API token> rpi-update
 
+## Troubleshooting
 
 There are two possible problems related to SSL certificates that may prevent
 this tool from working.
