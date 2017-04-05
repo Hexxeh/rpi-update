@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ldconfig
+
 set -o nounset
 set -o errexit
 
