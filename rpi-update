@@ -39,7 +39,7 @@ FW_REPO="${REPO_URI}.git"
 FW_REPOLOCAL=${FW_REPOLOCAL:-"${WORK_PATH}/.rpi-firmware"}
 FW_PATH="${BOOT_PATH}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
-FW_REV=${1:-""}
+FW_REV_IN=${1:-""}
 FW_REVFILE="${FW_PATH}/.firmware_revision"
 [ "${RPI_UPDATE_UNSUPPORTED}" -ne 0 ] && echo -e "You appear to be trying to update firmware on an incompatible distribution. To force update, run the following:\nsudo -E RPI_UPDATE_UNSUPPORTED=0 rpi-update" && exit 1
 
@@ -73,7 +73,7 @@ function update_self() {
 	cat > "${WORK_PATH}/.updateScript.sh" << EOF
 	if mv "${_tempFileName}" "$0"; then
 		rm -- "\$0"
-		exec env UPDATE_SELF=0 /bin/bash "$0" "${FW_REV}"
+		exec env UPDATE_SELF=0 /bin/bash "$0" "${FW_REV_IN}"
 	else
 		echo " !!! Failed!"
 	fi
@@ -153,11 +153,6 @@ function show_notice {
 		local NOTICE_HASH=$(echo "${NOTICE_HASH_HEAD}" | awk '{print $2}')
 	else
 		local NOTICE_HASH_EXISTS=false
-	fi
-	if [ -f "$FW_REVFILE" ]; then
-		local LOCAL_HASH=$(cat "$FW_REVFILE")
-	else
-		local LOCAL_HASH=0
 	fi
 	if ${NOTICE_HASH_EXISTS}; then
 		local NEW_HASH=${FW_REV}
@@ -351,6 +346,13 @@ function compare_hashes {
 	fi
 }
 
+function get_long_hash {
+	# ask github for long version hash
+	local REPO_API=${REPO_URI/github.com/api.github.com\/repos}/commits/$1
+	eval curl -Ls ${GITHUB_AUTH_PARAM} ${REPO_API} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40); exit 0 } }'
+}
+
+
 if [[ ${EUID} -ne 0 ]]; then
 	echo " !!! This tool must be run as root"
 	exit 1
@@ -388,32 +390,33 @@ command -v readelf >/dev/null 2>&1 || {
 	exit 1
 }
 
+if [[ "${FW_REV_IN}" == "" ]]; then
+	FW_REV_IN=${BRANCH}
+fi
+
+FW_REV=$(get_long_hash ${FW_REV_IN})
+
 if [[ "${FW_REV}" == "" ]]; then
-	# ask github for latest version hash
-	REPO_API=${REPO_URI/github.com/api.github.com\/repos}/git/refs/heads/${BRANCH}
-	FW_REV=$(eval curl -Ls ${GITHUB_AUTH_PARAM} ${REPO_API} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40) } }')
-	if [[ "${FW_REV}" == "" ]]; then
-		echo " *** No hash received from github: ${REPO_API}"
-		# run again with errors not suppressed
-		eval curl -L ${GITHUB_AUTH_PARAM} ${REPO_API}
-		exit 1
-	fi
+	echo " *** Invalid hash given"
+	exit 1
 fi
 
 if [[ ! -f "${FW_REVFILE}" ]]; then
+	LOCAL_HASH=0
 	echo " *** We're running for the first time"
 	if [[ ${JUST_CHECK} -ne 0 ]]; then
 		exit 2
 	fi
 	do_backup
 else
-	if [[ $(cat "${FW_REVFILE}") == "${FW_REV}" ]]; then
+	LOCAL_HASH=$(get_long_hash $(cat "${FW_REVFILE}"))
+	if [[ ${LOCAL_HASH} == "${FW_REV}" ]]; then
 		echo " *** Your firmware is already up to date"
 		exit 0
 	fi
 	if [[ ${JUST_CHECK} -ne 0 ]]; then
 		echo " *** Firmware update required. New commits available:"
-		DIFF_API=${REPO_URI/github.com/api.github.com\/repos}/compare/$(cat "${FW_REVFILE}")...${BRANCH}
+		DIFF_API=${REPO_URI/github.com/api.github.com\/repos}/compare/${LOCAL_HASH}...${FW_REV}
 		SEPARATOR="======================================================"
 		eval curl -Ls ${GITHUB_AUTH_PARAM} ${DIFF_API} | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "commits") {commits=1} if (commits && $2 == "message") {print SEPARATOR "\nCommit: " $4} }' | sed 's/\\n\\n/\nCommit:\ /g'
 		exit 2
