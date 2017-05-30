@@ -54,7 +54,7 @@ if [[ -n "${GITHUB_API_TOKEN}" ]]; then
 	GITHUB_AUTH_PARAM="--header \"Authorization: token ${GITHUB_API_TOKEN}\""
 fi
 
-GITHUB_API_LIMITED=$(eval curl -Ls ${GITHUB_AUTH_PARAM} https://api.github.com/rate_limit | awk 'BEGIN {reset=0;} { if ($1 == "\"limit\":") limit=strtonum($2); else if ($1 == "\"remaining\":") remaining=strtonum($2); else if ($1 == "\"reset\":" && limit>0 && remaining==0) reset=strtonum($2);} END { print reset }')
+GITHUB_API_LIMITED=$(eval curl -Ls ${GITHUB_AUTH_PARAM} https://api.github.com/rate_limit | tr -d "," | awk 'BEGIN {reset=0;} { if ($1 == "\"limit\":") limit=$2; else if ($1 == "\"remaining\":") remaining=$2; else if ($1 == "\"reset\":" && limit>0 && remaining==0) reset=$2;} END { print reset }')
 if [ ${GITHUB_API_LIMITED} -gt 0 ]; then
 	echo " *** Github api is currently rate limited - please try again after $(date --date @${GITHUB_API_LIMITED})"
 	exit 1
