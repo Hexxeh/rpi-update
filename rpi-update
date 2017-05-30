@@ -415,8 +415,13 @@ else
 		exit 0
 	fi
 	if [[ ${JUST_CHECK} -ne 0 ]]; then
-		echo " *** Firmware update required. New commits available:"
-		DIFF_API=${REPO_URI/github.com/api.github.com\/repos}/compare/${LOCAL_HASH}...${FW_REV}
+		if $(compare_hashes ${LOCAL_HASH} lt ${FW_REV}); then
+			echo " *** Firmware update required. New commits available:"
+			DIFF_API=${REPO_URI/github.com/api.github.com\/repos}/compare/${LOCAL_HASH}...${FW_REV}
+		else
+			echo " *** Firmware downgrade requested. Commits to drop:"
+			DIFF_API=${REPO_URI/github.com/api.github.com\/repos}/compare/${FW_REV}...${LOCAL_HASH}
+		fi
 		SEPARATOR="======================================================"
 		eval curl -Ls ${GITHUB_AUTH_PARAM} ${DIFF_API} | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "commits") {commits=1} if (commits && $2 == "message") {print SEPARATOR "\nCommit: " $4} }' | sed 's/\\n\\n/\nCommit:\ /g'
 		exit 2
