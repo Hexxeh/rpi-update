@@ -356,7 +356,7 @@ function compare_hashes {
 function get_long_hash {
 	# ask github for long version hash
 	local REPO_API=${REPO_URI/github.com/api.github.com\/repos}/commits/$1
-	eval curl -Ls ${GITHUB_AUTH_PARAM} ${REPO_API} | awk '{ if ($1 == "\"sha\":") { print substr($2, 2, 40); exit 0 } }'
+	eval curl -Ls ${GITHUB_AUTH_PARAM} ${REPO_API} | awk 'BEGIN {hash=""} { if (hash == "" && $1 == "\"sha\":") {hash=substr($2, 2, 40);} } END {print hash}'
 }
 
 
