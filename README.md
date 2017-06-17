@@ -62,7 +62,8 @@ If you'd like to set a different GPU/ARM memory split, then define `gpu_mem` in
 To upgrade/downgrade to a specific firmware revision, specify its Git hash
 (from the https://github.com/Hexxeh/rpi-firmware repository) as follows:
 
-    sudo rpi-update fab7796df0cf29f9563b507a59ce5b17d93e0390
+    # demo command
+    #sudo rpi-update fab7796df0cf29f9563b507a59ce5b17d93e0390
 
 ### Expert options
 
