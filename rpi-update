@@ -34,6 +34,7 @@ WANT_SYMVERS=${WANT_SYMVERS:-0}
 PRUNE_MODULES=${PRUNE_MODULES:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
 JUST_CHECK=${JUST_CHECK:-0}
+RPI_REBOOT=${RPI_REBOOT:-0}
 GITHUB_API_TOKEN=${GITHUB_API_TOKEN:-""}
 FW_REPO="${REPO_URI}.git"
 FW_REPOLOCAL=${FW_REPOLOCAL:-"${WORK_PATH}/.rpi-firmware"}
@@ -274,7 +275,12 @@ function do_update {
 	sync
 	echo " *** If no errors appeared, your firmware was successfully updated to ${FW_REV}"
 	if [[ "${ROOT_PATH}" == "/" ]]; then
-		echo " *** A reboot is needed to activate the new firmware"
+		if [[ ${RPI_REBOOT} -ne 0 ]]; then
+			echo " *** Rebooting to activate the new firmware"
+			reboot
+		else
+			echo " *** A reboot is needed to activate the new firmware"
+		fi
 	fi
 }
 
