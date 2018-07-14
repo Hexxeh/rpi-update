@@ -293,7 +293,7 @@ function download_rev {
 		echo " *** Downloading specific firmware revision (this will take a few minutes)"
 		rm -rf "${FW_REPOLOCAL}"
 		mkdir -p "${FW_REPOLOCAL}"
-		eval curl -L ${GITHUB_AUTH_PARAM} "${REPO_URI}/tarball/${FW_REV}" | tar xzf - -C "${FW_REPOLOCAL}" --strip-components=1
+		eval curl -w "" -L ${GITHUB_AUTH_PARAM} "${REPO_URI}/tarball/${FW_REV}" | tar xzf - -C "${FW_REPOLOCAL}" --strip-components=1
 	fi
 }
 
