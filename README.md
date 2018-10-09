@@ -136,6 +136,14 @@ By default, `rpi-update` will not use a custom GitHub API token. If you run into
 
 	sudo GITHUB_API_TOKEN=<your API token> rpi-update
 
+#### `RPI_REBOOT`
+
+To reboot after successfully update, run:
+
+    sudo RPI_REBOOT=1 rpi-update
+
+You can use it to automate updates.
+
 ## Troubleshooting
 
 There are two possible problems related to SSL certificates that may prevent
