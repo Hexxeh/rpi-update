@@ -160,3 +160,6 @@ this tool from working.
     on Debian, you can resolve this by typing:
 
         sudo apt-get install ca-certificates
+
+Pi-hole and similar DNS based may stop this tool from working.
+Make sure github.com domains are not blocked. (e.g. codeload.github.com)
