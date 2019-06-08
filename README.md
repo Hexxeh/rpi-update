@@ -1,13 +1,13 @@
 # rpi-update
 
-An easier way to get the latest firmware for your Raspberry Pi.
+A tool to get the latest bleeding-edge firmware and kernel for your Raspberry Pi.
 
 # Notes
 
 This is only intended for use with Raspbian. If you are using a different
 distribution then check with the maintainers if using rpi-update is safe.
 
-If the distribution ships a custom kernel, then it almost certainly is not
+If the distribution ships a custom kernel (e.g. BerryBoot), then it almost certainly is not
 safe. Also differences in the usage of /boot and /opt/vc directories will
 likely make it unsafe.
 
