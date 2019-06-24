@@ -35,6 +35,7 @@ SKIP_BACKUP=${SKIP_BACKUP:-0}
 SKIP_DOWNLOAD=${SKIP_DOWNLOAD:-0}
 SKIP_WARNING=${SKIP_WARNING:-0}
 WANT_SYMVERS=${WANT_SYMVERS:-0}
+WANT_PI4=${WANT_PI4:-0}
 PRUNE_MODULES=${PRUNE_MODULES:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
 JUST_CHECK=${JUST_CHECK:-0}
@@ -121,9 +122,15 @@ function update_modules {
 			done
 		fi
 
-		cp -R "${FW_REPOLOCAL}/modules/"* "${FW_MODPATH}/"
 		find "${FW_REPOLOCAL}/modules" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
-			BASEDIR=$(basename "${DIR}")
+			BASEDIR="$(basename "${DIR}")"
+			if [[ ${WANT_PI4} -ne 1 ]]; then
+				ENDSWITH=${BASEDIR: -4}
+				if [[ "${ENDSWITH}" == "v7l+" ]]; then
+					continue;
+				fi
+			fi
+			cp -R "${DIR}" "${FW_MODPATH}/"
 			echo " *** depmod ${BASEDIR}"
 			depmod -b "${ROOT_PATH}" -a "${BASEDIR}"
 		done
@@ -197,15 +204,48 @@ function show_notice {
 	fi
 }
 
+function check_partition {
+	local PARTSIZE=0
+	if command -v df > /dev/null 2>&1 ; then
+		local M=$(df -P ${BOOT_PATH} | awk 'END{print $1}')
+		if command -v lsblk > /dev/null 2>&1 ; then
+			PARTSIZE=$(lsblk -bno SIZE ${M})
+		fi
+	fi
+	echo PARTSIZE:$PARTSIZE
+	if [ $PARTSIZE -lt $(( 256*1024*1024 )) ]; then
+		echo "Partition size $(( $PARTSIZE >> 20 ))M may not be sufficient for new Pi4 files"
+		echo "This could result in a system that will not boot."
+		echo "256M FAT partition is recommended. Ensure you have a backup if continuing."
+		if [[ ${SKIP_WARNING} -ne 0 ]]; then
+			return
+		fi
+		read -p "Would you like to proceed? (y/N)" -n 1 -r -s
+		echo ""
+		if ! [[ $REPLY =~ ^[Yy]$ ]]; then
+			exit 1;
+		fi
+	fi
+}
+
 function update_firmware {
 	echo " *** Updating firmware"
 	rm -rf "${FW_PATH}/"*.elf
 	rm -rf "${FW_PATH}/"bootcode.bin
-	cp "${FW_REPOLOCAL}/"*.elf "${FW_PATH}/"
+	if [[ ${WANT_PI4} -eq 1 ]]; then
+		cp "${FW_REPOLOCAL}/"*.elf "${FW_PATH}/"
+		cp "${FW_REPOLOCAL}/"*.dat "${FW_PATH}/"
+	else
+		cp "${FW_REPOLOCAL}/"start[^4]*.elf "${FW_PATH}/"
+		cp "${FW_REPOLOCAL}/"fixup[^4]*.dat "${FW_PATH}/"
+	fi
 	cp "${FW_REPOLOCAL}/"*.bin "${FW_PATH}/"
-	cp "${FW_REPOLOCAL}/"*.dat "${FW_PATH}/"
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
-		cp "${FW_REPOLOCAL}/"*.img "${FW_PATH}/"
+		if [[ ${WANT_PI4} -eq 1 ]]; then
+			cp "${FW_REPOLOCAL}/"*.img "${FW_PATH}/"
+		else
+			cp "${FW_REPOLOCAL}/"kernel.img "${FW_REPOLOCAL}/"kernel7.img "${FW_PATH}/"
+		fi
 		if [[ -n $(shopt -s nullglob; echo "${FW_REPOLOCAL}/"*.dtb*) ]]; then
 			cp "${FW_REPOLOCAL}/"*.dtb* "${FW_PATH}/"
 		fi
@@ -271,6 +311,12 @@ function do_backup {
 }
 
 function do_update {
+	if [ -f ${FW_PATH}/kernel7l.img ]; then
+		WANT_PI4=1
+	fi
+	if [[ ${WANT_PI4} -eq 1 ]]; then
+		check_partition
+	fi
 	show_notice
 	download_rev
 	if [[ -f "${FW_REPOLOCAL}/pre-install" ]]; then
