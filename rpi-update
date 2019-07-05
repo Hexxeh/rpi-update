@@ -36,6 +36,7 @@ SKIP_DOWNLOAD=${SKIP_DOWNLOAD:-0}
 SKIP_WARNING=${SKIP_WARNING:-0}
 WANT_SYMVERS=${WANT_SYMVERS:-0}
 WANT_PI4=${WANT_PI4:-0}
+SKIP_CHECK_PARTITION=${SKIP_CHECK_PARTITION:-0}
 PRUNE_MODULES=${PRUNE_MODULES:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
 JUST_CHECK=${JUST_CHECK:-0}
@@ -314,7 +315,7 @@ function do_update {
 	if [ -f ${FW_PATH}/kernel7l.img ]; then
 		WANT_PI4=1
 	fi
-	if [[ ${WANT_PI4} -eq 1 ]]; then
+	if [[ ${WANT_PI4} -eq 1 ]] && [[ ${SKIP_CHECK_PARTITION} -eq 0 ]]; then
 		check_partition
 	fi
 	show_notice

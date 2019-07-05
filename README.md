@@ -144,6 +144,22 @@ To reboot after successfully update, run:
 
 You can use it to automate updates.
 
+#### `WANT_PI4`
+
+To explicitly request an update comprehensive of Rasberry PI 4 files, run:
+
+    sudo WANT_PI4=1 rpi-update
+
+This will download suitable environments for all Raspberry PI models.
+
+#### `SKIP_CHECK_PARTITION`
+
+To skip the boot partition size check when installing Raspberry PI 4 files, run:
+
+    sudo SKIP_CHECK_PARTITION=1 rpi-update
+
+Note that a 256M FAT boot partition is recommended, any less could result in a system that will not boot.
+
 ## Troubleshooting
 
 There are two possible problems related to SSL certificates that may prevent
