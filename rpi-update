@@ -34,6 +34,7 @@ SKIP_REPODELETE=${SKIP_REPODELETE:-0}
 SKIP_BACKUP=${SKIP_BACKUP:-0}
 SKIP_DOWNLOAD=${SKIP_DOWNLOAD:-0}
 SKIP_WARNING=${SKIP_WARNING:-0}
+SKIP_CHECK_PARTITION=${SKIP_CHECK_PARTITION:-0}
 WANT_SYMVERS=${WANT_SYMVERS:-0}
 WANT_PI4=${WANT_PI4:-0}
 PRUNE_MODULES=${PRUNE_MODULES:-0}
@@ -205,6 +206,9 @@ function show_notice {
 }
 
 function check_partition {
+	if [[ ${SKIP_CHECK_PARTITION} -ne 0 ]]; then
+		return
+	fi
 	local PARTSIZE=0
 	if command -v df > /dev/null 2>&1 ; then
 		local M=$(df -P ${BOOT_PATH} | awk 'END{print $1}')
