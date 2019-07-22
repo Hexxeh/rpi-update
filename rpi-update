@@ -84,6 +84,12 @@ function update_self() {
 		exit 1
 	fi
 
+	if [[ "$(head -1 ${_tempFileName})" != '#!/bin/bash' ]]; then
+		echo " !!! Failed to download update for rpi-update!"
+		echo " !!! Contents of file is not as expected - github may be down"
+		exit 1
+	fi
+
 	local OCTAL_MODE=$(stat -c '%a' "$0")
 	if ! chmod ${OCTAL_MODE} "${_tempFileName}" ; then
 		echo " !!! Failed: Error while trying to set mode on ${_tempFileName}"
