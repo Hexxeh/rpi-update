@@ -136,6 +136,10 @@ function update_modules {
 				if [[ "${ENDSWITH}" == "v7l+" ]]; then
 					continue;
 				fi
+				ENDSWITH=${BASEDIR: -3}
+				if [[ "${ENDSWITH}" == "v8+" ]]; then
+					continue;
+				fi
 			fi
 			cp -R "${DIR}" "${FW_MODPATH}/"
 			echo " *** depmod ${BASEDIR}"
