@@ -222,12 +222,13 @@ function check_partition {
 	local PARTSIZE=0
 	if command -v df > /dev/null 2>&1 ; then
 		local M=$(df -P ${BOOT_PATH} | awk 'END{print $1}')
-		if command -v lsblk > /dev/null 2>&1 ; then
-			PARTSIZE=$(lsblk -bno SIZE ${M})
+		if [[ $M == /dev/* ]]; then
+			if command -v lsblk > /dev/null 2>&1 ; then
+				PARTSIZE=$(lsblk -bno SIZE ${M})
+			fi
 		fi
 	fi
-	echo PARTSIZE:$PARTSIZE
-	if [ $PARTSIZE -lt $(( 256*1024*1024 )) ]; then
+	if [ $PARTSIZE -ne 0 ] && [ $PARTSIZE -lt $(( 256*1024*1024 )) ]; then
 		echo "Partition size $(( $PARTSIZE >> 20 ))M may not be sufficient for new Pi4 files"
 		echo "This could result in a system that will not boot."
 		echo "256M FAT partition is recommended. Ensure you have a backup if continuing."
