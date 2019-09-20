@@ -177,6 +177,67 @@ function update_sdk {
 	fi
 }
 
+# Check if the bootloader is older than the latest critical release. An old
+# bootloader shouldn't block rpi-update so just inform the user that bootloader
+# is out of date.
+function check_eeprom_version {
+	local CURRENT_VERSION=""
+	local FIRST_VERSION=1557513636
+	# MIN VERSION for Sep 10 2019 EEPROM
+	local MIN_VERSION=1568112110
+	local HAVE_BOOTLOADER_EEPROM=0
+
+	# Skip EEPROM check if vcgencmd is missing because it won't be possible to
+	# check the version.
+	if ! command -v vcgencmd > /dev/null; then
+		return
+	fi
+
+	rev="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
+	if [ $(((0x$rev >> 23) & 1)) -ne 0 ] && [ $(((0x$rev >> 12) & 15)) -eq 3 ]; then
+		HAVE_BOOTLOADER_EEPROM=1
+	fi
+
+	if [ "${HAVE_BOOTLOADER_EEPROM}" != 1 ]; then
+		return
+	fi
+
+	# vcgencmd doesn't return non-zero for unknown commands.
+	if vcgencmd bootloader_config | grep -qi "Command not registered"; then
+		# Firmware is too old to return the bootloader config
+		return
+	fi
+
+	# If FREEZE_VERSION is specified then assume that the user doesn't want
+	# an EEPROM update so skip the check.
+	if vcgencmd bootloader_config | grep -q FREEZE_VERSION=1; then
+		return
+	fi
+
+	if vcgencmd bootloader_version | grep -q timestamp; then
+		CURRENT_VERSION=$(vcgencmd bootloader_version | grep timestamp | awk '{print $2}')
+		if [ "${CURRENT_VERSION}" = "0" ]; then
+			# If a timestamp of zero is returned then it's new firmware but an
+			# old bootloader. Assume bootloader v0
+			CURRENT_VERSION="${FIRST_VERSION}"
+		fi
+	else
+		# New bootloader / old firmware ? Try to parse the date
+		CURRENT_VERSION=$(date -u +%s --date "$(vcgencmd bootloader_version | head -n1)")
+	fi
+
+	# Failed to parse the version. Default to the initial production release.
+	if [ -z "${CURRENT_VERSION}" ]; then
+		CURRENT_VERSION="${FIRST_VERSION}"
+	fi
+
+	if [ "${CURRENT_VERSION}" -lt "${MIN_VERSION}" ]; then
+		echo "A newer bootloader EEPROM version is available."
+		echo "On Debian, try: sudo apt update; sudo apt install rpi-eeprom"
+		echo "then reboot to install the new bootloader"
+	fi
+}
+
 function show_notice {
 	local NOTICE_URI=${REPO_CONTENT_URI}/${FW_REV}/NOTICE.md
 	local FULL_NOTICE=$(eval curl -fs ${CURL_OPTIONS} "${NOTICE_URI}")
@@ -332,6 +393,7 @@ function do_update {
 	if [[ ${WANT_PI4} -eq 1 ]]; then
 		check_partition
 	fi
+	check_eeprom_version
 	show_notice
 	download_rev
 	if [[ -f "${FW_REPOLOCAL}/pre-install" ]]; then
