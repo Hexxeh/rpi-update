@@ -144,6 +144,14 @@ To reboot after successfully update, run:
 
 You can use it to automate updates.
 
+#### `WANT_PI4`
+
+If you want the tool to also download the Raspberry Pi 4 firmware, run:
+
+    sudo WANT_PI4=1 rpi-update
+
+By default, Pi 4 firmware is not downloaded on system running with a lower pi version.
+
 ## Troubleshooting
 
 There are two possible problems related to SSL certificates that may prevent
