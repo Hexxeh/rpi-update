@@ -30,6 +30,7 @@ BOOT_PATH=${BOOT_PATH:-"/boot"}
 WORK_PATH=${WORK_PATH:-"${ROOT_PATH}/root"}
 SKIP_KERNEL=${SKIP_KERNEL:-0}
 SKIP_SDK=${SKIP_SDK:-0}
+SKIP_VCLIBS=${SKIP_VCLIBS:-0}
 SKIP_REPODELETE=${SKIP_REPODELETE:-0}
 SKIP_BACKUP=${SKIP_BACKUP:-0}
 SKIP_DOWNLOAD=${SKIP_DOWNLOAD:-0}
@@ -151,7 +152,12 @@ function update_modules {
 }
 
 function update_vc_libs {
-	echo " *** Updating VideoCore libraries"
+	if [[ ${SKIP_VCLIBS} -eq 0 ]]; then
+		echo " *** Updating VideoCore libraries"
+	else
+		echo " *** As requested, not updating VideoCore libraries"
+		return
+	fi
 
 	if [[ -e ${ROOT_PATH}/bin/sh ]]; then
 		local ELFOUTPUT=$(readelf -a "${ROOT_PATH}/bin/sh"; readelf -h "${ROOT_PATH}/bin/sh")
