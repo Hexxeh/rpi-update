@@ -96,6 +96,14 @@ Avoids making backup of /boot and /lib/modules on first run.
 By default the downloaded files (/root/.rpi-firmware) are deleted at end of update.
 Use this option to keep the files.
 
+#### `SKIP_VCLIBS`
+
+    sudo SKIP_VCLIBS=1 rpi-update
+
+Will update everything **except** the VideoCore libraries.
+Use this option to keep the existing VideoCore libraries if you do not want your
+local versions overwritten.
+
 #### `ROOT_PATH` and `BOOT_PATH`
 
     sudo ROOT_PATH=/media/root BOOT_PATH=/media/boot rpi-update
