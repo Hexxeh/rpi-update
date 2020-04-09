@@ -113,6 +113,16 @@ are not currently booted from. Useful for installing firmware/kernel to a
 non-RPI customised image. Be careful, you must specify both options or neither.
 Specifying only one will not work.
 
+#### `FW_SUBDIR`
+
+    sudo FW_SUBDIR=safe rpi-update
+
+Allows the firmware to be installed to a subdirectory of /boot. This feature is
+intended to support the `os_prefix` setting that can be used in `config.txt`.
+By default, FW_SUBDIR is initialised to the value of `os_prefix` in effect when
+the device was booted, so as to overwrite the "running" firmware. To explicitly
+install with no subdirectory (to install into /boot), use `FW_SUBDIR=/`.
+
 #### `BRANCH`
 
 By default, clones the firmware files from the master branch, else uses the files

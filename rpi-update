@@ -26,6 +26,16 @@ fi
 
 BRANCH=${BRANCH:-"master"}
 ROOT_PATH=${ROOT_PATH:-"/"}
+CUR_FW_SUBDIR="/$(echo =$(vcgencmd get_config os_prefix) | cut -d'=' -f3)"
+FW_SUBDIR=${FW_SUBDIR:-${CUR_FW_SUBDIR}}
+if [[ "${FW_SUBDIR}" != "" ]]; then
+	if [[ "${FW_SUBDIR::1}" != "/" ]]; then
+		FW_SUBDIR="/$FW_SUBDIR"
+	fi
+	if [[ "${FW_SUBDIR: -1}" == "/" ]]; then
+		FW_SUBDIR=${FW_SUBDIR: : -1}
+	fi
+fi
 BOOT_PATH=${BOOT_PATH:-"/boot"}
 WORK_PATH=${WORK_PATH:-"${ROOT_PATH}/root"}
 SKIP_KERNEL=${SKIP_KERNEL:-0}
@@ -47,7 +57,7 @@ GITHUB_API_TOKEN=${GITHUB_API_TOKEN:-""}
 
 FW_REPO="${REPO_URI}.git"
 FW_REPOLOCAL=${FW_REPOLOCAL:-"${WORK_PATH}/.rpi-firmware"}
-FW_PATH="${BOOT_PATH}"
+FW_PATH="${BOOT_PATH}${FW_SUBDIR}"
 FW_MODPATH="${ROOT_PATH}/lib/modules"
 FW_REV_IN=${1:-""}
 FW_REVFILE="${FW_PATH}/.firmware_revision"
@@ -370,7 +380,7 @@ function finalise {
 function do_backup {
 	if [[ ${SKIP_BACKUP} -eq 0 ]]; then
 		echo " *** Backing up files (this will take a few minutes)"
-		local OLD_FW_PATH=${FW_PATH}.bak
+		local OLD_FW_PATH="${BOOT_PATH}.bak"
 		if [[ -d "${OLD_FW_PATH}" ]]; then
 			echo " *** Remove old firmware backup"
 			rm -rf "${OLD_FW_PATH}"
