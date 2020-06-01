@@ -237,6 +237,8 @@ function check_eeprom_version {
 			# old bootloader. Assume bootloader v0
 			CURRENT_VERSION="${FIRST_VERSION}"
 		fi
+	elif vcgencmd bootloader_version | grep -qi "unknown"; then
+		return
 	else
 		# New bootloader / old firmware ? Try to parse the date
 		CURRENT_VERSION=$(date -u +%s --date "$(vcgencmd bootloader_version | head -n1)")
