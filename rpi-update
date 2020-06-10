@@ -72,13 +72,16 @@ fi
 # Always follow redirects
 CURL_OPTIONS="${CURL_OPTIONS} -L"
 
+# api.github.com requires a User-Agent header
+CURL_OPTIONS_API="${CURL_OPTIONS_API:-"-A curl"}"
+
 # Support for custom GitHub Auth Tokens
 if [[ -n "${GITHUB_API_TOKEN}" ]]; then
 	echo " *** Using GitHub token for all requests."
 	CURL_OPTIONS="${CURL_OPTIONS} --header \"Authorization: token ${GITHUB_API_TOKEN}\""
 fi
 
-GITHUB_API_LIMITED=$(eval curl -s ${CURL_OPTIONS} "https://api.github.com/rate_limit" | tr -d "," | awk 'BEGIN {reset=0;} { if ($1 == "\"limit\":") limit=$2; else if ($1 == "\"remaining\":") remaining=$2; else if ($1 == "\"reset\":" && limit>0 && remaining==0) reset=$2;} END { print reset }')
+GITHUB_API_LIMITED=$(eval curl ${CURL_OPTIONS_API} -s ${CURL_OPTIONS} "https://api.github.com/rate_limit" | tr -d "," | awk 'BEGIN {reset=0;} { if ($1 == "\"limit\":") limit=$2; else if ($1 == "\"remaining\":") remaining=$2; else if ($1 == "\"reset\":" && limit>0 && remaining==0) reset=$2;} END { print reset }')
 if [ ${GITHUB_API_LIMITED} -gt 0 ]; then
 	echo " *** Github API is currently rate limited - please try again after $(date --date @${GITHUB_API_LIMITED})"
 	exit 1
@@ -504,7 +507,7 @@ function noobs_fix {
 
 function get_hash_date {
 	local COMMITS_URI=${REPO_API_URI}/commits/$1
-	eval curl -s ${CURL_OPTIONS} "${COMMITS_URI}" | grep "date" | head -1 | awk -F\" '{print $4}'
+	eval curl ${CURL_OPTIONS_API} -s ${CURL_OPTIONS} "${COMMITS_URI}" | grep "date" | head -1 | awk -F\" '{print $4}'
 }
 
 function compare_hashes {
@@ -520,7 +523,7 @@ function compare_hashes {
 function get_long_hash {
 	# ask github for long version hash
 	local COMMITS_URI=${REPO_API_URI}/commits/$1
-	eval curl -s ${CURL_OPTIONS} "${COMMITS_URI}" | awk 'BEGIN {hash=""} { if (hash == "" && $1 == "\"sha\":") {hash=substr($2, 2, 40);} } END {print hash}'
+	eval curl ${CURL_OPTIONS_API} -s ${CURL_OPTIONS} "${COMMITS_URI}" | awk 'BEGIN {hash=""} { if (hash == "" && $1 == "\"sha\":") {hash=substr($2, 2, 40);} } END {print hash}'
 }
 
 
@@ -597,7 +600,7 @@ else
 			DIFF_URI=${REPO_API_URI}/compare/${FW_REV}...${LOCAL_HASH}
 		fi
 		SEPARATOR="======================================================"
-		eval curl -s ${CURL_OPTIONS} "${DIFF_URI}" | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "commits") {commits=1} if (commits && $2 == "message") {print SEPARATOR "\nCommit: " $4} }' | sed 's/\\n\\n/\nCommit:\ /g'
+		eval curl ${CURL_OPTIONS_API} -s ${CURL_OPTIONS} "${DIFF_URI}" | awk -v SEPARATOR="${SEPARATOR}" -F\" ' { if ($2 == "commits") {commits=1} if (commits && $2 == "message") {print SEPARATOR "\nCommit: " $4} }' | sed 's/\\n\\n/\nCommit:\ /g'
 		exit 2
 	fi
 fi
