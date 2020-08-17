@@ -212,8 +212,12 @@ function check_eeprom_version {
 		return
 	fi
 
-	rev="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
-	if [ $(((0x$rev >> 23) & 1)) -ne 0 ] && [ $(((0x$rev >> 12) & 15)) -eq 3 ]; then
+	rev=
+	if [ -f /proc/cpuinfo ]; then
+		rev="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
+	fi
+
+	if [ -n $rev ] && [ $(((0x$rev >> 23) & 1)) -ne 0 ] && [ $(((0x$rev >> 12) & 15)) -eq 3 ]; then
 		HAVE_BOOTLOADER_EEPROM=1
 	fi
 
