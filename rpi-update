@@ -412,7 +412,7 @@ function do_backup {
 }
 
 function do_update {
-	if [ -f ${FW_PATH}/kernel7l.img ]; then
+	if [ -f ${FW_PATH}/kernel7l.img ] || [ -f ${FW_PATH}/kernel8.img ]; then
 		WANT_PI4=1
 	fi
 	if [[ ${WANT_PI4} -eq 1 ]]; then
