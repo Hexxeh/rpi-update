@@ -4,19 +4,19 @@ A tool to get the latest bleeding-edge firmware and kernel for your Raspberry Pi
 
 # Notes
 
-This is only intended for use with Raspbian. If you are using a different
+This is only intended for use with Raspberry Pi OS. If you are using a different
 distribution then check with the maintainers if using rpi-update is safe.
 
 If the distribution ships a custom kernel (e.g. BerryBoot), then it almost certainly is not
 safe. Also differences in the usage of /boot and /opt/vc directories will
 likely make it unsafe.
 
-Even on Raspbian you should only use this with a good reason.
+Even on Raspberry Pi OS you should only use this with a good reason.
 
 This gets you the latest bleeding edge kernel/firmware.
 There is always the possibility of regressions.
 
-Bug fixes and improvements will eventually make their way into new Raspbian
+Bug fixes and improvements will eventually make their way into new Raspberry Pi OS
 releases and apt-get when they are considered sufficiently well tested.
 
 A good reason for using this would be if you like to help with the testing effort,
@@ -25,13 +25,13 @@ and are happy to risk breakages and submit bug reports. These testers are welcom
 Also if you are suffering from a bug in current firmware (perhaps as one of
 the reporters of the bug on github or forum) and a fix has been pushed out for
 testing, then using rpi-update is the right way to get the fix until it makes
-its way into new Raspbian images and apt-get.
+its way into new Raspberry Pi OS images and apt-get.
 
 Backing up before updating is always advisable.
 
 ## Installing
 
-### Installing under Raspbian
+### Installing under Raspberry Pi OS
  
 To install the tool, run the following command:
 
