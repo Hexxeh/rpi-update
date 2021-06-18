@@ -592,7 +592,7 @@ if [[ ! -f "${FW_REVFILE}" ]]; then
 else
 	LOCAL_HASH=$(get_long_hash "$(cat "${FW_REVFILE}")")
 	if [[ "${LOCAL_HASH}" == "${FW_REV}" ]]; then
-		echo " *** Your firmware is already up to date. (Delete ${FW_REVFILE} to force an update anyway)"
+		echo " *** Your firmware is already up to date (delete ${FW_REVFILE} to force an update anyway)"
 		exit 0
 	fi
 	if [[ ${JUST_CHECK} -ne 0 ]]; then
