@@ -1,3 +1,8 @@
+# This repo is now deprecated
+
+Development is continuing at https://github.com/raspberrypi/rpi-update
+The rpi-update script will switch automatically to the new repo.
+
 # rpi-update
 
 A tool to get the latest bleeding-edge firmware and kernel for your Raspberry Pi.
