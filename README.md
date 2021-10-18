@@ -41,7 +41,7 @@ To install the tool, run the following command:
 
 To install the tool, run the following command:
 
-    sudo curl -L --output /usr/bin/rpi-update https://raw.githubusercontent.com/Hexxeh/rpi-update/master/rpi-update && sudo chmod +x /usr/bin/rpi-update
+    sudo curl -L --output /usr/bin/rpi-update https://raw.githubusercontent.com/raspberrypi/rpi-update/master/rpi-update && sudo chmod +x /usr/bin/rpi-update
 
 ## Updating
 
@@ -60,7 +60,7 @@ If you'd like to set a different GPU/ARM memory split, then define `gpu_mem` in
 `/boot/config.txt`.
 
 To upgrade/downgrade to a specific firmware revision, specify its Git hash
-(from the https://github.com/Hexxeh/rpi-firmware repository) as follows:
+(from the https://github.com/raspberrypi/rpi-firmware repository) as follows:
 
     sudo rpi-update fab7796df0cf29f9563b507a59ce5b17d93e0390
 
