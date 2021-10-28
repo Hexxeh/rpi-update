@@ -11,7 +11,7 @@ UPDATE_SELF=${UPDATE_SELF:-1}
 UPDATE_REPO_URI="https://github.com/raspberrypi/rpi-update"
 UPDATE_REPO_CONTENT_URI=${UPDATE_REPO_URI/github.com/raw.githubusercontent.com}
 UPDATE_URI="${UPDATE_REPO_CONTENT_URI}/master/rpi-update"
-
+DOWNLOAD_RETRY_CNT="3"
 if [[ "${BOOT_PATH:-"unset"}" == "unset" && "${ROOT_PATH:-"unset"}" != "unset" ]] ||
 [[ "${BOOT_PATH:-"unset"}" != "unset" && "${ROOT_PATH:-"unset"}" == "unset" ]]; then
 	echo " *** You need to specify both ROOT_PATH and BOOT_PATH, or neither"
@@ -458,7 +458,7 @@ function download_rev {
 		echo " *** Downloading specific firmware revision (this will take a few minutes)"
 		rm -rf "${FW_REPOLOCAL}"
 		mkdir -p "${FW_REPOLOCAL}"
-		eval curl ${CURL_OPTIONS} "${FW_TARBALL_URI}" | tar xzf - -C "${FW_REPOLOCAL}" --strip-components=1
+		eval curl ${CURL_OPTIONS} "${FW_TARBALL_URI}" --retry ${DOWNLOAD_RETRY_CNT}| tar xzf - -C "${FW_REPOLOCAL}" --strip-components=1
 	fi
 }
 
