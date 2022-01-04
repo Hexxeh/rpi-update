@@ -331,11 +331,11 @@ function check_partition {
 
 function update_firmware {
 	echo " *** Updating firmware"
-	rm -rf "${FW_PATH}/"*.elf
+	rm -rf "${FW_PATH}/"start*.elf
 	rm -rf "${FW_PATH}/"bootcode.bin
 	if [[ ${WANT_PI4} -eq 1 ]]; then
-		cp "${FW_REPOLOCAL}/"*.elf "${FW_PATH}/"
-		cp "${FW_REPOLOCAL}/"*.dat "${FW_PATH}/"
+		cp "${FW_REPOLOCAL}/"start*.elf "${FW_PATH}/"
+		cp "${FW_REPOLOCAL}/"fixup*.dat "${FW_PATH}/"
 	else
 		cp "${FW_REPOLOCAL}/"start{,[^4]*}.elf "${FW_PATH}/"
 		cp "${FW_REPOLOCAL}/"fixup{,[^4]*}.dat "${FW_PATH}/"
