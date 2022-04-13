@@ -133,7 +133,7 @@ function update_modules {
 
 		if [[ ${PRUNE_MODULES} -ne 0 ]]; then
 			find "${FW_MODPATH}" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
-				COUNT=$(find "${DIR}" -type f ! \( -name '*.ko' -o -name 'modules.*' \) | wc -l);
+				COUNT=$(find "${DIR}" -type f ! \( -name '*.ko' -o -name '*.ko.xz' -o -name 'modules.*' \) | wc -l);
 				if [[ ${COUNT} -eq 0 ]]; then
 					echo "Pruning ${DIR}"
 					rm -rf "${DIR}"
