@@ -26,7 +26,11 @@ fi
 
 BRANCH=${BRANCH:-"master"}
 ROOT_PATH=${ROOT_PATH:-"/"}
-CUR_FW_SUBDIR="/$(echo =$(vcgencmd get_config os_prefix) | cut -d'=' -f3)"
+if command -v vcgencmd > /dev/null; then
+	CUR_FW_SUBDIR="/$(echo =$(vcgencmd get_config os_prefix) | cut -d'=' -f3)"
+else
+	CUR_FW_SUBDIR="/"
+fi
 FW_SUBDIR=${FW_SUBDIR:-${CUR_FW_SUBDIR}}
 if [[ "${FW_SUBDIR}" != "" ]]; then
 	if [[ "${FW_SUBDIR::1}" != "/" ]]; then
@@ -47,7 +51,6 @@ SKIP_DOWNLOAD=${SKIP_DOWNLOAD:-0}
 SKIP_WARNING=${SKIP_WARNING:-0}
 SKIP_CHECK_PARTITION=${SKIP_CHECK_PARTITION:-0}
 WANT_SYMVERS=${WANT_SYMVERS:-0}
-WANT_PI4=${WANT_PI4:-0}
 PRUNE_MODULES=${PRUNE_MODULES:-0}
 RPI_UPDATE_UNSUPPORTED=${RPI_UPDATE_UNSUPPORTED:-0}
 JUST_CHECK=${JUST_CHECK:-0}
@@ -145,13 +148,20 @@ function update_modules {
 
 		find "${FW_REPOLOCAL}/modules" -mindepth 1 -maxdepth 1 -type d | while read DIR; do
 			BASEDIR="$(basename "${DIR}")"
-			if [[ ${WANT_PI4} -ne 1 ]]; then
-				ENDSWITH=${BASEDIR: -4}
-				if [[ "${ENDSWITH}" == "v7l+" ]]; then
+			# get the v7l from 5.15.78-v7l+ and null from 5.15.78+
+			VERSION=$(echo $BASEDIR | cut -sd "-" -f2)
+			if [[ ${WANT_32BIT} -ne 1 ]]; then
+				if [[ "${VERSION}" == "" ]] || [[ "${VERSION}" == "v7+" ]] || [[ "${VERSION}" == "v7l+" ]]; then
 					continue;
 				fi
-				ENDSWITH=${BASEDIR: -3}
-				if [[ "${ENDSWITH}" == "v8+" ]]; then
+			fi
+			if [[ ${WANT_64BIT} -ne 1 ]]; then
+				if [[ "${VERSION}" == "v8+" ]]; then
+					continue;
+				fi
+			fi
+			if [[ ${WANT_PI4} -ne 1 ]]; then
+				if [[ "${VERSION}" == "v7l+" ]]; then
 					continue;
 				fi
 			fi
@@ -332,6 +342,7 @@ function check_partition {
 function update_firmware {
 	echo " *** Updating firmware"
 	rm -rf "${FW_PATH}/"start*.elf
+	rm -rf "${FW_PATH}/"fixup*.dat
 	rm -rf "${FW_PATH}/"bootcode.bin
 	if [[ ${WANT_PI4} -eq 1 ]]; then
 		cp "${FW_REPOLOCAL}/"start*.elf "${FW_PATH}/"
@@ -342,10 +353,14 @@ function update_firmware {
 	fi
 	cp "${FW_REPOLOCAL}/"*.bin "${FW_PATH}/"
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
-		if [[ ${WANT_PI4} -eq 1 ]]; then
-			cp "${FW_REPOLOCAL}/"*.img "${FW_PATH}/"
-		else
+		if [[ ${WANT_32BIT} -eq 1 ]]; then
 			cp "${FW_REPOLOCAL}/"kernel.img "${FW_REPOLOCAL}/"kernel7.img "${FW_PATH}/"
+			if [[ ${WANT_PI4} -eq 1 ]]; then
+				cp "${FW_REPOLOCAL}/"kernel7l.img "${FW_PATH}/"
+			fi
+		fi
+		if [[ ${WANT_64BIT} -eq 1 ]]; then
+			cp "${FW_REPOLOCAL}/"kernel8.img "${FW_PATH}/"
 		fi
 		if [[ -n $(shopt -s nullglob; echo "${FW_REPOLOCAL}/"*.dtb*) ]]; then
 			cp "${FW_REPOLOCAL}/"*.dtb* "${FW_PATH}/"
@@ -412,9 +427,22 @@ function do_backup {
 }
 
 function do_update {
-	if [ -f ${FW_PATH}/kernel7l.img ] || [ -f ${FW_PATH}/kernel8.img ]; then
-		WANT_PI4=1
+	if [ -f ${FW_PATH}/kernel.img ] || [ -f ${FW_PATH}/kernel7.img ]; then
+		WANT_32BIT=${WANT_32BIT:-1}
 	fi
+	if [ -f ${FW_PATH}/kernel7l.img ]; then
+		WANT_32BIT=${WANT_32BIT:-1}
+	fi
+	if [ -f ${FW_PATH}/kernel8.img ]; then
+		WANT_64BIT=${WANT_64BIT:-1}
+	fi
+	if [ -f ${FW_PATH}/start4.elf ]; then
+		WANT_PI4=${WANT_PI4:-1}
+	fi
+	WANT_32BIT=${WANT_32BIT:-0}
+	WANT_64BIT=${WANT_64BIT:-0}
+	WANT_PI4=${WANT_PI4:-0}
+	echo "WANT_32BIT:${WANT_32BIT} WANT_64BIT:${WANT_64BIT} WANT_PI4:${WANT_PI4}"
 	if [[ ${WANT_PI4} -eq 1 ]]; then
 		check_partition
 	fi
