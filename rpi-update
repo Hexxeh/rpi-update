@@ -481,7 +481,20 @@ function do_update {
 }
 
 function download_rev {
-	if [[ ${SKIP_DOWNLOAD} -eq 0 ]]; then
+	if [[ "${ARTIFACT}" != "" ]]; then
+		if [[ ${FW_REV_IN} == http* ]]; then
+			GET="wget --no-check-certificate -qO-"
+		else
+			GET="cat"
+		fi
+		echo " *** Downloading specific firmware revision (this will take a few minutes)"
+		rm -rf "${FW_REPOLOCAL}"
+		mkdir -p "${FW_REPOLOCAL}"
+		if ! eval ${GET} "${ARTIFACT}" | zcat | tar xf - -C "${FW_REPOLOCAL}" --strip-components=2; then
+			echo "Invalid artifact specified"
+			exit 1
+		fi
+	elif [[ ${SKIP_DOWNLOAD} -eq 0 ]]; then
 		local FW_TARBALL_URI=${REPO_URI}/tarball/${FW_REV}
 		if ! eval curl -fs ${CURL_OPTIONS} --output /dev/null --head "${FW_TARBALL_URI}"; then
 			echo "Invalid git hash specified"
@@ -606,7 +619,15 @@ if [[ "${FW_REV_IN}" == "" ]]; then
 	FW_REV_IN=${BRANCH}
 fi
 
-FW_REV=$(get_long_hash "${FW_REV_IN}")
+if [[ ${FW_REV_IN} == http* ]] || [[ ${FW_REV_IN} == *.zip ]]; then
+	ARTIFACT=${FW_REV_IN}
+	FW_REV=${ARTIFACT}
+	SKIP_FIRMWARE=1
+	SKIP_SDK=1
+	SKIP_VCLIBS=1
+else
+	FW_REV=$(get_long_hash "${FW_REV_IN}")
+fi
 
 if [[ "${FW_REV}" == "" ]]; then
 	echo " *** Invalid hash given"
@@ -622,7 +643,11 @@ if [[ ! -f "${FW_REVFILE}" ]]; then
 	fi
 	do_backup
 else
-	LOCAL_HASH=$(get_long_hash "$(cat "${FW_REVFILE}")")
+	if [[ "${ARTIFACT}" != "" ]]; then
+		LOCAL_HASH=$(cat "${FW_REVFILE}")
+	else
+		LOCAL_HASH=$(get_long_hash "$(cat "${FW_REVFILE}")")
+	fi
 	if [[ "${LOCAL_HASH}" == "${FW_REV}" ]]; then
 		echo " *** Your firmware is already up to date (delete ${FW_REVFILE} to force an update anyway)"
 		exit 0
