@@ -436,7 +436,7 @@ function do_update {
 	if [ -f ${FW_PATH}/kernel8.img ]; then
 		WANT_64BIT=${WANT_64BIT:-1}
 	fi
-	if [ -f ${FW_PATH}/start4.elf ]; then
+	if [ -f ${FW_PATH}/start4.elf ] || [ -f ${BOOT_PATH}/start4.elf ]; then
 		WANT_PI4=${WANT_PI4:-1}
 	fi
 	WANT_32BIT=${WANT_32BIT:-0}
