@@ -58,6 +58,7 @@ JUST_CHECK=${JUST_CHECK:-0}
 RPI_REBOOT=${RPI_REBOOT:-0}
 CURL_OPTIONS=${CURL_OPTIONS:-""}
 GITHUB_API_TOKEN=${GITHUB_API_TOKEN:-""}
+REDIRECTOR=${REDIRECTOR:-"https://builds.raspberrypi.com/github/linux"}
 
 FW_REPO="${REPO_URI}.git"
 FW_REPOLOCAL=${FW_REPOLOCAL:-"${WORK_PATH}/.rpi-firmware"}
@@ -481,7 +482,30 @@ function do_update {
 }
 
 function download_rev {
-	if [[ ${SKIP_DOWNLOAD} -eq 0 ]]; then
+	if [[ "${ARTIFACT}" != "" ]]; then
+		if [[ -f ${FW_REV_IN} ]]; then
+			GET="cat"
+		else
+			GET="curl ${CURL_OPTIONS}"
+		fi
+		echo " *** Downloading specific artifact revision (this will take a few minutes)"
+		rm -rf "${FW_REPOLOCAL}"
+		mkdir -p "${FW_REPOLOCAL}"
+		for build in ${BUILD}; do
+			if [[ ${FW_REV_IN} != http* ]] && [[ ! -f ${FW_REV_IN} ]]; then
+				A="${REDIRECTOR}/${ARTIFACT}/${build}"
+			else
+				A="${ARTIFACT}"
+			fi
+			echo "${GET} ${A} | zcat | tar xf - -C ${FW_REPOLOCAL} --strip-components=2"
+			if ! eval ${GET} "${A}" | zcat | tar xf - -C "${FW_REPOLOCAL}" --strip-components=2; then
+				if [[ ${GET} = curl* ]]; then
+					echo Invalid artifact specified. Response: $( ${GET} "${A}" -o /dev/null -w "%{http_code}" ).
+				fi
+				exit 1
+			fi
+		done
+	elif [[ ${SKIP_DOWNLOAD} -eq 0 ]]; then
 		local FW_TARBALL_URI=${REPO_URI}/tarball/${FW_REV}
 		if ! eval curl -fs ${CURL_OPTIONS} --output /dev/null --head "${FW_TARBALL_URI}"; then
 			echo "Invalid git hash specified"
@@ -606,7 +630,34 @@ if [[ "${FW_REV_IN}" == "" ]]; then
 	FW_REV_IN=${BRANCH}
 fi
 
-FW_REV=$(get_long_hash "${FW_REV_IN}")
+ARTIFACT=""
+BUILD=""
+FW_REV=""
+if [[ ${FW_REV_IN} != http* ]] && [[ ! -f ${FW_REV_IN} ]]; then
+	FW_REV=$(get_long_hash "${FW_REV_IN}")
+fi
+
+echo FW_REV:$FW_REV
+
+if [[ "${FW_REV}" == "" ]]; then
+	if [[ ${FW_REV_IN} != http* ]] && [[ ! -f ${FW_REV_IN} ]]; then
+		IFS=':' read ARTIFACT BUILD <<<${FW_REV_IN}
+		if [[ "${BUILD}" == "" ]]; then
+			BUILD="bcmrpi bcm2709 bcm2711 bcm2711_arm64"
+		fi
+		if [[ "${ARTIFACT}" == pulls/* ]]; then
+			PULL=${ARTIFACT##*/}
+			ARTIFACT=$(eval curl -s "https://api.github.com/repos/raspberrypi/linux/pulls/${PULL}" | awk '/"sha":/ {gsub(/"/, "", $2); gsub(/,/, "", $2); print $2; exit}')
+		fi
+	else
+		ARTIFACT=${FW_REV_IN}
+		BUILD=dummy
+	fi
+	FW_REV=${ARTIFACT}
+	SKIP_FIRMWARE=1
+	SKIP_SDK=1
+	SKIP_VCLIBS=1
+fi
 
 if [[ "${FW_REV}" == "" ]]; then
 	echo " *** Invalid hash given"
@@ -622,7 +673,11 @@ if [[ ! -f "${FW_REVFILE}" ]]; then
 	fi
 	do_backup
 else
-	LOCAL_HASH=$(get_long_hash "$(cat "${FW_REVFILE}")")
+	if [[ "${ARTIFACT}" != "" ]]; then
+		LOCAL_HASH=$(cat "${FW_REVFILE}")
+	else
+		LOCAL_HASH=$(get_long_hash "$(cat "${FW_REVFILE}")")
+	fi
 	if [[ "${LOCAL_HASH}" == "${FW_REV}" ]]; then
 		echo " *** Your firmware is already up to date (delete ${FW_REVFILE} to force an update anyway)"
 		exit 0
