@@ -357,13 +357,14 @@ function update_firmware {
 	fi
 	if [[ ${SKIP_KERNEL} -eq 0 ]]; then
 		if [[ ${WANT_32BIT} -eq 1 ]]; then
-			cp "${FW_REPOLOCAL}/"kernel.img "${FW_REPOLOCAL}/"kernel7.img "${FW_PATH}/"
+			[[ -e "${FW_REPOLOCAL}/"kernel.img ]] && cp "${FW_REPOLOCAL}/"kernel.img "${FW_PATH}/"
+			[[ -e "${FW_REPOLOCAL}/"kernel7.img ]] && cp "${FW_REPOLOCAL}/"kernel7.img "${FW_PATH}/"
 			if [[ ${WANT_PI4} -eq 1 ]]; then
-				cp "${FW_REPOLOCAL}/"kernel7l.img "${FW_PATH}/"
+				[[ -e "${FW_REPOLOCAL}/"kernel7l.img ]] && cp "${FW_REPOLOCAL}/"kernel7l.img "${FW_PATH}/"
 			fi
 		fi
 		if [[ ${WANT_64BIT} -eq 1 ]]; then
-			cp "${FW_REPOLOCAL}/"kernel8.img "${FW_PATH}/"
+			[[ -e "${FW_REPOLOCAL}/"kernel8.img ]] && cp "${FW_REPOLOCAL}/"kernel8.img "${FW_PATH}/"
 		fi
 		if [[ -n $(shopt -s nullglob; echo "${FW_REPOLOCAL}/"*.dtb*) ]]; then
 			cp "${FW_REPOLOCAL}/"*.dtb* "${FW_PATH}/"
