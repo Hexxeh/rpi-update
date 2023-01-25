@@ -341,6 +341,27 @@ function check_partition {
 	fi
 }
 
+function check_initramfs {
+	local INITRAMFS=""
+	if command -v vcgencmd > /dev/null; then
+		INITRAMFS="$(echo =$(vcgencmd get_config ramfsfile) | cut -d'=' -f3)"
+	fi
+	if [ "$INITRAMFS" == "" ]; then
+		return
+	fi
+	if [[ ${SKIP_WARNING} -ne 0 ]]; then
+		return
+	fi
+	echo "Updating a system with initramfs configured is not supported by rpi-update"
+	echo "This could result in a system that will not boot."
+	read -p "Would you like to proceed? (y/N)" -n 1 -r -s
+	echo ""
+	if ! [[ $REPLY =~ ^[Yy]$ ]]; then
+		exit 1;
+	fi
+}
+
+
 function update_firmware {
 	if [[ ${SKIP_FIRMWARE} -eq 0 ]]; then
 		echo " *** Updating firmware"
@@ -451,6 +472,7 @@ function do_update {
 	if [[ ${WANT_PI4} -eq 1 ]]; then
 		check_partition
 	fi
+	check_initramfs
 	check_eeprom_version
 	show_notice
 	download_rev
