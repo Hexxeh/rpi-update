@@ -64,6 +64,25 @@ To upgrade/downgrade to a specific firmware revision, specify its Git hash
 
     sudo rpi-update fab7796df0cf29f9563b507a59ce5b17d93e0390
 
+You can also specify a git branch in raspberrypi/rpi-firmware repo.
+
+    sudo rpi-update next
+
+## Using github artifacts from automated builds
+
+You can also update the kernel to an automated github build from raspberrypi/linux.
+These builds persist for 90 days, and won't be available after that time has elapsed.
+
+    sudo rpi-update pulls/5335 # update to most recent build from pull request 5335
+    sudo rpi-update ledoff     # update to a build PR'd from local branch named ledoff
+    sudo rpi-update 14a52e4d   # update to a build with hash 14a52e4d
+    sudo rpi-update rpi-6.2.y  # update to a latest build from branch rpi-6.2.y
+
+If you only care about one build architecture you can specify the build architecture.
+Options are: bcmrpi bcm2709 bcm2711 bcm2711_arm64 bcm2835 arm64 (last two are with upstream kernel config)
+
+    sudo rpi-update rpi-6.2.y:bcm2711  # update only bcm2711 kernel to latest build from branch rpi-6.2.y
+
 ### Expert options
 
 There are a number of options for experts you might like to use.  These are all
